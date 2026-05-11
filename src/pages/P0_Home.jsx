@@ -10,7 +10,7 @@ export default function P0_Home() {
           Plataforma de Inteligencia Territorial
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-          Seleccione su entorno operativo. Nuestra arquitectura adaptativa configura las herramientas, agentes de IA y flujos de datos específicos para potenciar su impacto en el ecosistema agrícola colombiano.
+          Seleccione su rol en el sistema. ETNO-IA Rural 2.0 adapta sus agentes de Inteligencia Artificial para acompañar la alfabetización digital, respetando los saberes y el contexto de las comunidades campesinas del nororiente colombiano.
         </p>
       </div>
 
@@ -82,7 +82,7 @@ export default function P0_Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-on-surface opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-on-surface"></span>
             </div>
-            <span className="font-label-md text-label-md text-on-primary-fixed-variant">Seguridad Blockchain Activa</span>
+            <span className="font-label-md text-label-md text-on-primary-fixed-variant">Seguridad Activa</span>
           </div>
         </Link>
 

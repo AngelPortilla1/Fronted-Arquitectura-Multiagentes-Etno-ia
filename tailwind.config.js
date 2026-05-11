@@ -78,7 +78,17 @@ export default {
         "margin-desktop": "64px",
         "gutter": "24px",
         "unit": "8px"
-      }
+      },
+      fontSize: {
+    "headline-md": ["1.75rem", {
+      lineHeight: "2.25rem",
+      fontWeight: "700",
+    }],
+    "headline-lg": ["2.5rem", {
+      lineHeight: "3rem",
+      fontWeight: "700",
+    }],
+  },
     },
   },
   plugins: [],
