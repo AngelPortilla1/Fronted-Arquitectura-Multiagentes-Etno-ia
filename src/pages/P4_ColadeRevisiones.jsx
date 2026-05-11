@@ -13,7 +13,7 @@ export default function PanelAuditoria() {
   const fetchPendingReviews = async () => {
     try {
       // Conexión al backend local de FastAPI
-      const response = await fetch('http://127.0.0.1:8000/api/reviews?status=pending');
+      const response = await fetch('http://127.0.0.1:8000/reviews?status=pending');
       
       if (!response.ok) {
         throw new Error('No se pudo conectar con el servidor local.');
@@ -33,7 +33,7 @@ export default function PanelAuditoria() {
 
   const handleApprove = async (reviewId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/reviews/${reviewId}/approve`, {
+      const response = await fetch(`http://127.0.0.1:8000/reviews/${reviewId}/approve`, {
         method: 'POST',
       });
 
