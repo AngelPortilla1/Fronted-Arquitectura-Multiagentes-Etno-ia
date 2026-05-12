@@ -7,6 +7,7 @@ import P3_RutaPedagogica from './pages/P3_RutaPedagogica';
 import P4_ColadeRevisiones from './pages/P4_ColadeRevisiones';
 import P5_Segmentos from './pages/P5_Segmentos'; 
 import P6_AprobacionCurricular from './pages/P6_AprobacionCurricular';
+import P7_Auditoria from './pages/P7_Auditoria';
 
 export default function App() {
   return (
@@ -22,7 +23,7 @@ export default function App() {
           {/* F3.1: Pantalla de Segmentos Comunitarios */}
           <Route path="/segmentos" element={<P5_Segmentos />} />
           
-          <Route path="/auditoria" element={<div className="p-8 text-xl">Pantalla P7 (En construcción...)</div>} />
+          <Route path="/auditoria" element={<P7_Auditoria />} />
         </Route>
       </Routes>
     </BrowserRouter>
