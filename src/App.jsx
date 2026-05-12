@@ -5,7 +5,8 @@ import P1_RegistrarRelato from './pages/P1_RegistrarRelato';
 import P2_ModeloMental from './pages/P2_ModeloMental';
 import P3_RutaPedagogica from './pages/P3_RutaPedagogica';
 import P4_ColadeRevisiones from './pages/P4_ColadeRevisiones';
-import P5_Segmentos from './pages/P5_Segmentos'; // <--- Importamos P5
+import P5_Segmentos from './pages/P5_Segmentos'; 
+import P6_AprobacionCurricular from './pages/P6_AprobacionCurricular';
 
 export default function App() {
   return (
@@ -17,7 +18,7 @@ export default function App() {
           <Route path="/modelo-mental" element={<P2_ModeloMental />} />
           <Route path="/ruta-pedagogica" element={<P3_RutaPedagogica />} />
           <Route path="/revisiones" element={<P4_ColadeRevisiones />} />
-          
+          <Route path="/aprobacion-curricular" element={<P6_AprobacionCurricular />} />
           {/* F3.1: Pantalla de Segmentos Comunitarios */}
           <Route path="/segmentos" element={<P5_Segmentos />} />
           
