@@ -112,7 +112,7 @@ export default function P4_ColadeRevisiones() {
                   Productor: {review.pid.replace(/_/g, ' ')}
                 </div>
                 <h2 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface flex items-center gap-3">
-                  Ruta Sugerida: <span className="capitalize text-primary">{review.payload.route_type}</span>
+                  Ruta Sugerida: <span className="capitalize text-primary">{review.payload?.route_type || 'No especificada'}</span>
                 </h2>
               </div>
 
@@ -123,7 +123,7 @@ export default function P4_ColadeRevisiones() {
                   Justificación del Sistema BDI
                 </h3>
                 <p className="font-body-lg text-on-surface-variant leading-relaxed bg-surface-container-highest p-5 rounded-2xl border border-outline-variant/30 italic">
-                  "{review.payload.explanation}"
+                  "{review.payload?.explanation || 'Sin justificación disponible'}"
                 </p>
               </div>
 
@@ -134,21 +134,25 @@ export default function P4_ColadeRevisiones() {
                   Módulos a Asignar
                 </h3>
                 <ul className="space-y-4">
-                  {review.payload.steps.map((step, index) => (
-                    <li key={index} className="flex items-center gap-4 bg-surface-container p-4 rounded-2xl border border-outline-variant/30 transition-colors hover:border-primary/50">
-                      <div className="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-inner">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <p className="font-body-lg font-bold text-on-surface">
-                          {step.title}
-                        </p>
-                        <p className="text-sm text-on-surface-variant font-mono mt-1">
-                          ID: {step.module_id}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
+                  {review.payload?.steps && Array.isArray(review.payload.steps) ? (
+                    review.payload.steps.map((step, index) => (
+                      <li key={index} className="flex items-center gap-4 bg-surface-container p-4 rounded-2xl border border-outline-variant/30 transition-colors hover:border-primary/50">
+                        <div className="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-inner">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-body-lg font-bold text-on-surface">
+                            {step.title}
+                          </p>
+                          <p className="text-sm text-on-surface-variant font-mono mt-1">
+                            ID: {step.module_id}
+                          </p>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-on-surface-variant italic">Sin módulos definidos</li>
+                  )}
                 </ul>
               </div>
 

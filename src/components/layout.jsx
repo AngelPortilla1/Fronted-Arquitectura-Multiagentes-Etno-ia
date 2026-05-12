@@ -1,9 +1,13 @@
 import { Outlet, Link } from 'react-router-dom';
-import { useApiStatus } from '../hooks/useApiStatus';
+import { useApiStatus } from '../hooks/useAPistatus';
+import { useAgentsStatus } from '../hooks/useAgentsStatus';
+import { AgentStatusDropdown } from './agents/AgentStatusDropdown';
+import Footer from './footer';
 
 export default function Layout() {
   // Uso del sensor real para el principio Offline-first
   const { isOnline, loading } = useApiStatus();
+  const { agents, isLoading } = useAgentsStatus();
 
   return (
     <div className="relative min-h-screen">
@@ -46,13 +50,8 @@ export default function Layout() {
               </span>
             </div>
             
-            {/* Agents Status */}
-            <div className="flex items-center gap-2 bg-surface-container-high px-3 py-1.5 rounded-full border border-outline-variant/30">
-              <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>neurology</span>
-              <span className="font-label-md text-label-md text-on-surface-variant">12 Agentes Activos</span>
-            </div>
-            
-          </div>
+            {/* Agents Status - Observabilidad Cognitiva Multi-Agente */}
+            <AgentStatusDropdown agents={agents} isLoading={isLoading} error={null} />
 
           {/* Actions */}
           <div className="flex items-center gap-4">
@@ -63,7 +62,7 @@ export default function Layout() {
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>account_circle</span>
             </button>
           </div>
-          
+        </div>
         </div>
       </header>
 
@@ -71,6 +70,9 @@ export default function Layout() {
       <div className="relative z-10 pt-[120px] pb-24">
         <Outlet />
       </div>
+
+      {/* Footer */}
+      <Footer />
       
     </div>
   );
