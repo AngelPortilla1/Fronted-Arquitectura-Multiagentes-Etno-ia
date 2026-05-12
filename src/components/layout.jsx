@@ -1,8 +1,13 @@
 import { Outlet, Link } from 'react-router-dom';
+import { useApiStatus } from '../hooks/useApiStatus';
 
 export default function Layout() {
+  // Uso del sensor real para el principio Offline-first
+  const { isOnline, loading } = useApiStatus();
+
   return (
     <div className="relative min-h-screen">
+      
       {/* Atmospheric Background Layers */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-surface-container-lowest to-surface-container-high opacity-80"></div>
@@ -15,6 +20,7 @@ export default function Layout() {
       {/* TopNavBar */}
       <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm transition-all duration-500 hover:backdrop-blur-2xl">
         <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+          
           {/* Brand */}
           <div className="flex items-center gap-2">
             <Link to="/" className="font-display-lg text-headline-md font-bold text-primary">
@@ -24,13 +30,20 @@ export default function Layout() {
 
           {/* Indicators */}
           <div className="hidden md:flex items-center gap-6">
-            {/* Ollama Status */}
-            <div className="flex items-center gap-2 bg-surface-container-high px-3 py-1.5 rounded-full border border-outline-variant/30">
+            
+            {/* StatusBar Dinámico (Sensor FastAPI/Ollama) */}
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors duration-500 ${
+              isOnline ? 'bg-surface-container-high border-outline-variant/30' : 'bg-error-container/20 border-error/30'
+            }`}>
               <div className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-fixed opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-on-tertiary-container"></span>
+                {isOnline && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-fixed opacity-75"></span>
+                )}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-on-tertiary-container' : 'bg-error'}`}></span>
               </div>
-              <span className="font-label-md text-label-md text-on-surface-variant">Ollama Core: Online</span>
+              <span className={`font-label-md text-label-md ${isOnline ? 'text-on-surface-variant' : 'text-error font-bold'}`}>
+                Ollama Core: {loading ? 'Sincronizando...' : isOnline ? 'Online' : 'Offline'}
+              </span>
             </div>
             
             {/* Agents Status */}
@@ -38,6 +51,7 @@ export default function Layout() {
               <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>neurology</span>
               <span className="font-label-md text-label-md text-on-surface-variant">12 Agentes Activos</span>
             </div>
+            
           </div>
 
           {/* Actions */}
@@ -49,6 +63,7 @@ export default function Layout() {
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>account_circle</span>
             </button>
           </div>
+          
         </div>
       </header>
 
@@ -56,6 +71,7 @@ export default function Layout() {
       <div className="relative z-10 pt-[120px] pb-24">
         <Outlet />
       </div>
+      
     </div>
   );
 }

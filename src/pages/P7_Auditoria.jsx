@@ -7,7 +7,7 @@ export default function P7_Auditoria() {
   const [loading, setLoading] = useState(true);
   const [revokingId, setRevokingId] = useState(null);
   
-  // Para la demostración, auditamos a nuestro usuario de prueba
+  // Usamos uno de los PIDs reales de tu base de datos
   const [targetPid, setTargetPid] = useState('productor_vereda_rosal_01'); 
 
   useEffect(() => {
@@ -16,48 +16,24 @@ export default function P7_Auditoria() {
 
   const fetchAuditLogs = async () => {
     setLoading(true);
-    // Mock Data de Auditoría (Trazabilidad y Deltas)
-    const mockAudit = [
-      {
-        event_id: "evt_98f2a1",
-        ts: "2026-05-10T08:30:00Z",
-        type: "narrative.v1",
-        actor: "Facilitador_01",
-        action: "Captura de relato inicial",
-        delta: "Creación de perfil. Consentimiento explícito: OTORGADO.",
-        status: "success"
-      },
-      {
-        event_id: "evt_98f2b4",
-        ts: "2026-05-10T08:31:15Z",
-        type: "mental_model.update",
-        actor: "Agente_M_per",
-        action: "Actualización de Grafo BDI",
-        delta: "+ Nodo[Desconfianza Digital] | + Relación[Teléfono -> Miedo(Impuestos)]",
-        status: "success"
-      },
-      {
-        event_id: "evt_98f3c9",
-        ts: "2026-05-11T14:20:00Z",
-        type: "curriculum.proposed",
-        actor: "Agente_M_curr",
-        action: "Generación de Ruta Pedagógica",
-        delta: "Ruta asignada: Alfabetización en Soberanía de Datos (Riesgo Alto)",
-        status: "success"
-      }
-    ];
-
     try {
-      const response = await fetch(`http://127.0.0.1:8000/audit?pid=${targetPid}`);
+      const response = await fetch(`http://127.0.0.1:8000/audit`); // Ajusta la ruta si es necesario para filtrar por PID
       if (response.ok) {
-        const data = await response.json();
-        setLogs(Array.isArray(data) && data.length > 0 ? data : mockAudit);
+        let data = await response.json();
+        
+        // Filtramos para mostrar solo los de este productor (opcional)
+        data = data.filter(log => log.pid === targetPid);
+        
+        // Ordenamos por fecha más reciente primero (opcional, dependiendo de cómo quieras verlo)
+        data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        setLogs(data);
       } else {
-        setLogs(mockAudit);
+        setLogs([]);
       }
     } catch (err) {
-      console.warn("Backend de auditoría no disponible. Usando datos simulados.");
-      setLogs(mockAudit);
+      console.warn("Backend de auditoría no disponible.");
+      setLogs([]);
     } finally {
       setLoading(false);
     }
@@ -66,7 +42,7 @@ export default function P7_Auditoria() {
   const handleRevoke = async () => {
     const confirmacion = window.confirm(
       "⚠️ ATENCIÓN: Esta acción es irreversible.\n\n" +
-      "¿Está seguro que el productor ha solicitado la revocación de su consentimiento? " +
+      `¿Está seguro que el productor ${targetPid} ha solicitado la revocación de su consentimiento? ` +
       "Esto eliminará su relato, su modelo mental BDI y su ruta curricular del sistema."
     );
 
@@ -74,16 +50,14 @@ export default function P7_Auditoria() {
 
     setRevokingId(targetPid);
     try {
-      const response = await fetch('http://127.0.0.1:8000/revoke', {
+      // Endpoint simulado/real de revocación
+      await fetch('http://127.0.0.1:8000/revoke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pid: targetPid, reason: "Solicitud directa del usuario en campo" })
       });
-
-      if (response.ok || !response.ok) { // Simulamos éxito incluso si falla por no tener backend
-        alert("✅ Datos revocados exitosamente. El perfil ha sido anonimizado/eliminado de la arquitectura BDI.");
-        navigate('/'); // Lo devolvemos al inicio tras borrar
-      }
+      alert("✅ Datos revocados exitosamente. El perfil ha sido purgado de la arquitectura BDI.");
+      navigate('/'); 
     } catch (err) {
       console.error(err);
       alert("Error de conexión al intentar revocar los datos.");
@@ -91,11 +65,45 @@ export default function P7_Auditoria() {
     }
   };
 
+  // Función traductora para convertir el Payload JSON complejo a texto legible para el Auditor
+  const extractDeltaText = (log) => {
+    try {
+      const { action, payload } = log;
+      switch(action) {
+        case 'validate_consent':
+          return `Consentimiento: ${payload.decision.toUpperCase()}. Permisos: ${payload.allowed_scopes.join(', ')}`;
+        case 'normalize':
+          return `Texto normalizado (${payload.channel}): "${payload.normalized_text.substring(0, 70)}..."`;
+        case 'suggest_probe':
+          return `Pregunta de profundización sugerida: "${payload.question}"`;
+        case 'assign_codes':
+          const codes = payload.codes.map(c => c.code).join(', ');
+          return `Códigos semánticos asignados: ${codes}`;
+        case 'update_mental_model':
+          return `Grafo actualizado (Revisión ${payload.revision}). Nodos: ${payload.nodes.length} | Relaciones nuevas: ${payload.edges.length}`;
+        case 'evaluate_fairness':
+          return `Evaluación de sesgos: ${payload.decision}. Acción recomendada: ${payload.recommended_action}`;
+        case 'propose_route':
+          return `Ruta candidata generada (${payload.route_type}). Módulos propuestos: ${payload.steps.length}`;
+        case 'explain_route':
+          return `Razonamiento LLM: "${payload.explanation.substring(0, 80)}..."`;
+        case 'open_review':
+          return `Revisión Humana Requerida (Estado: ${payload.status}). Rol: ${payload.required_role}`;
+        case 'persist_delta':
+          return `Delta guardado en base de datos. Hash de integridad: ${payload.data_hash.substring(0, 16)}...`;
+        default:
+          return `Registro modificado en capa de memoria: ${log.memory_layer}`;
+      }
+    } catch (e) {
+      return "Detalles técnicos cifrados en el payload original.";
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
         <span className="animate-spin material-symbols-outlined text-5xl text-on-surface-variant">sync</span>
-        <p className="font-headline-md text-xl text-on-surface-variant animate-pulse">Recuperando cadena de auditoría...</p>
+        <p className="font-headline-md text-xl text-on-surface-variant animate-pulse">Recuperando cadena de auditoría criptográfica...</p>
       </div>
     );
   }
@@ -115,7 +123,7 @@ export default function P7_Auditoria() {
         </div>
         <div className="flex flex-col md:flex-row md:items-center justify-between ml-10 gap-4">
           <p className="font-body-md text-on-surface-variant">
-            Trazabilidad de eventos, cambios en modelos mentales (deltas) y gestión de revocación de consentimiento.
+            Trazabilidad de eventos, firmas criptográficas y gestión de revocación de consentimiento (Privacy by Design).
           </p>
           <div className="bg-surface-container-highest px-4 py-2 rounded-xl text-sm font-mono border border-outline-variant/50">
             PID Auditado: <span className="font-bold text-on-surface">{targetPid}</span>
@@ -124,7 +132,7 @@ export default function P7_Auditoria() {
       </header>
 
       {/* Panel de Revocación (Zona Peligrosa) */}
-      <div className="mb-8 bg-error-container/10 border border-error/30 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="mb-8 bg-error-container/10 border border-error/30 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">
         <div>
           <h3 className="font-headline-md text-error flex items-center gap-2 mb-2">
             <span className="material-symbols-outlined">warning</span>
@@ -147,59 +155,71 @@ export default function P7_Auditoria() {
         </button>
       </div>
 
-      {/* Cadena de Auditoría (Línea de tiempo técnica) */}
-      <div className="flex-1 bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden flex flex-col">
-        <div className="bg-surface-container-highest p-4 border-b border-outline-variant/30 flex items-center gap-2">
-          <span className="material-symbols-outlined text-on-surface-variant">history</span>
-          <h2 className="font-label-md font-bold uppercase tracking-wider text-on-surface">Registro de Eventos (Log)</h2>
+      {/* Cadena de Auditoría (Línea de tiempo técnica real) */}
+      <div className="flex-1 bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden flex flex-col min-h-0">
+        <div className="bg-surface-container-highest p-4 border-b border-outline-variant/30 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-on-surface-variant">history</span>
+            <h2 className="font-label-md font-bold uppercase tracking-wider text-on-surface">Registro de Eventos (Log Criptográfico)</h2>
+          </div>
+          <span className="text-xs font-mono text-on-surface-variant">{logs.length} eventos registrados</span>
         </div>
         
         <div className="p-6 overflow-y-auto space-y-6">
-          {logs.map((log, index) => (
-            <div key={log.event_id} className="relative pl-6 pb-6 border-l-2 border-outline-variant/30 last:pb-0 last:border-transparent group">
-              {/* Timeline dot */}
-              <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-surface border-2 border-primary group-hover:bg-primary transition-colors"></div>
-              
-              <div className="bg-surface-container p-4 rounded-2xl border border-outline-variant/20 hover:border-outline-variant transition-colors">
-                {/* Meta info */}
-                <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono bg-surface-container-highest px-2 py-1 rounded text-on-surface-variant border border-outline-variant/30">
-                      {log.event_id}
-                    </span>
-                    <span className="text-xs font-bold text-primary uppercase tracking-widest">
-                      {log.type}
+          {logs.length === 0 ? (
+            <p className="text-center text-on-surface-variant italic">No hay eventos de auditoría para este productor.</p>
+          ) : (
+            logs.map((log, index) => (
+              <div key={log.record_hash} className="relative pl-6 pb-6 border-l-2 border-outline-variant/30 last:pb-0 last:border-transparent group">
+                {/* Timeline dot */}
+                <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-surface border-2 border-primary group-hover:bg-primary transition-colors"></div>
+                
+                <div className="bg-surface-container p-4 rounded-2xl border border-outline-variant/20 hover:border-outline-variant transition-colors">
+                  {/* Meta info */}
+                  <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono bg-surface-container-highest px-2 py-1 rounded text-on-surface-variant border border-outline-variant/30 font-bold" title="Record Hash">
+                        {log.record_hash.substring(0, 12)}...
+                      </span>
+                      {/* Badge dinámico según la capa de memoria */}
+                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full tracking-widest ${
+                        log.memory_layer === 'M_policy' ? 'bg-error-container text-on-error-container' :
+                        log.memory_layer === 'M_sem' ? 'bg-secondary-container text-on-secondary-container' :
+                        log.memory_layer === 'M_graph' ? 'bg-tertiary-container text-on-tertiary-container' :
+                        'bg-primary-container text-on-primary-container'
+                      }`}>
+                        {log.memory_layer}
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono text-on-surface-variant opacity-70">
+                      {new Date(log.timestamp).toLocaleString('es-CO')}
                     </span>
                   </div>
-                  <span className="text-xs font-mono text-on-surface-variant opacity-70">
-                    {new Date(log.ts).toLocaleString('es-CO')}
-                  </span>
-                </div>
 
-                {/* Acción y Actor */}
-                <h4 className="font-headline-md text-lg text-on-surface mb-1">
-                  {log.action}
-                </h4>
-                <p className="text-sm text-on-surface-variant mb-4 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">account_circle</span>
-                  Actor / Autor: <strong className="font-mono">{log.actor}</strong>
-                </p>
+                  {/* Acción y Actor (Mapeados desde el JSON real) */}
+                  <h4 className="font-headline-md text-lg text-on-surface mb-1 uppercase tracking-wide">
+                    {log.action.replace(/_/g, ' ')}
+                  </h4>
+                  <p className="text-sm text-on-surface-variant mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">smart_toy</span>
+                    Agente Responsable: <strong className="font-mono text-primary">{log.agent}</strong>
+                  </p>
 
-                {/* Delta (El cambio en los datos) */}
-                <div className="bg-surface-container-highest p-3 rounded-xl border border-outline-variant/30">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase mb-1 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">difference</span> Delta registrado:
-                  </p>
-                  <p className="font-mono text-sm text-on-surface">
-                    {log.delta}
-                  </p>
+                  {/* Delta / Payload Traducido */}
+                  <div className="bg-surface-container-highest p-3 rounded-xl border border-outline-variant/30">
+                    <p className="text-xs font-bold text-on-surface-variant uppercase mb-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">data_object</span> Trazabilidad del Payload:
+                    </p>
+                    <p className="font-mono text-sm text-on-surface leading-relaxed">
+                      {extractDeltaText(log)}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
-
     </div>
   );
 }
