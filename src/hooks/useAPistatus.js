@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 export function useApiStatus() {
   const [isOnline, setIsOnline] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState('Offline'); // 'Offline', 'Ollama', 'Stubs'
 
   useEffect(() => {
     // Función para verificar la salud del backend
@@ -17,11 +18,26 @@ export function useApiStatus() {
         
         if (response.ok) {
           setIsOnline(true);
+          try {
+            const data = await response.json();
+            // Asumimos que el backend podría enviar un campo 'mode', 'llm', 'backend_mode', o similar.
+            // Ajustar según el JSON real que devuelva /health.
+            const backendMode = data.mode || data.llm_mode || data.status || 'Online';
+            if (backendMode.toLowerCase().includes('stub')) {
+              setMode('Stubs');
+            } else {
+              setMode('Ollama'); // Por defecto si está encendido y no dice stub
+            }
+          } catch (e) {
+            setMode('Online');
+          }
         } else {
           setIsOnline(false);
+          setMode('Offline');
         }
       } catch (err) {
         setIsOnline(false);
+        setMode('Offline');
       } finally {
         setLoading(false);
       }
@@ -37,5 +53,5 @@ export function useApiStatus() {
     return () => clearInterval(interval);
   }, []);
 
-  return { isOnline, loading };
+  return { isOnline, loading, mode };
 }

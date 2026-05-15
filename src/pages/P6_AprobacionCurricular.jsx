@@ -53,19 +53,21 @@ export default function P6_AprobacionCurricular() {
     ];
 
     try {
-      // Tarea F3.2: Combinamos la consulta (en un backend real aquí usarías Promise.all o un endpoint compuesto)
-      const response = await fetch('http://127.0.0.1:8000/reviews?status=pending&type=curriculum');
+      // Tarea F3.2: Combinamos la consulta
+      const response = await fetch('http://127.0.0.1:8000/reviews?status=pending');
       if (response.ok) {
         const data = await response.json();
-        const validData = Array.isArray(data) && data.length > 0 ? data : mockData;
-        setCurricula(validData);
-        setSelectedItem(validData[0]); // Seleccionamos el primero por defecto
+        // Filtramos localmente para quedarnos solo con las de tipo "curriculum" (o adaptarlo a tu estructura)
+        const filteredData = Array.isArray(data) 
+          ? data.filter(item => item.payload?.type === 'curriculum' || !item.payload?.type) // Asumiendo estructura, puedes ajustar la condición
+          : [];
+        setCurricula(filteredData);
+        setSelectedItem(filteredData.length > 0 ? filteredData[0] : null); // Seleccionamos el primero por defecto
       } else {
-        setCurricula(mockData);
-        setSelectedItem(mockData[0]);
+        throw new Error('Backend encendido pero no retornó datos válidos (ej. 404).');
       }
     } catch (err) {
-      console.warn("Backend no disponible. Cargando entorno de prueba curricular.");
+      console.warn("Backend no disponible o error de red. Cargando entorno de prueba curricular como FALLBACK EXCLUSIVO.");
       setCurricula(mockData);
       setSelectedItem(mockData[0]);
     } finally {

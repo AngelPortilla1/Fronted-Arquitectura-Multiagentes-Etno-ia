@@ -20,11 +20,15 @@ export default function P2_ModeloMental() {
     setLoading(true);
     try {
       // Intentamos consumir el endpoint de tu arquitectura (Tarea F2.2)
-      const response = await fetch(`http://127.0.0.1:8000/mental-model?pid=${pid}`);
+      const response = await fetch(`http://127.0.0.1:8000/participants/${pid}/mental-model`);
       
       if (response.ok) {
         const data = await response.json();
-        setGraphData(data);
+        // Garantizar que la data tenga nodes y links válidos para que react-force-graph-2d no lance TypeError
+        setGraphData({
+          nodes: Array.isArray(data.nodes) ? data.nodes : [],
+          links: Array.isArray(data.links) ? data.links : []
+        });
       } else {
         // Fallback de demostración BDI si el backend aún no retorna el formato D3
         // Esto ilustra cómo M_per conecta el relato de la desconfianza digital
@@ -48,7 +52,26 @@ export default function P2_ModeloMental() {
         });
       }
     } catch (err) {
-      setError('No se pudo conectar con el agente. Mostrando red simulada.');
+      console.warn('No se pudo conectar con el agente. Mostrando red simulada.', err);
+      // Fallback en caso de error de red (CORS o server caído)
+      setGraphData({
+        nodes: [
+          { id: 'Productor', group: 'actor', val: 25, color: '#1b3022', desc: 'Campesino (Vereda Rosal)' },
+          { id: 'Teléfono', group: 'concept', val: 15, color: '#4d6453', desc: 'Dispositivo móvil' },
+          { id: 'Desconfianza', group: 'belief', val: 20, color: '#ba1a1a', desc: 'Creencia: Uso de app implica riesgo' },
+          { id: 'Impuestos', group: 'fear', val: 15, color: '#805533', desc: 'Miedo: Cobros del gobierno' },
+          { id: 'Robo de Datos', group: 'fear', val: 15, color: '#805533', desc: 'Miedo: Pérdida de soberanía sobre su finca' },
+          { id: 'Cuaderno', group: 'intention', val: 15, color: '#7a9e32', desc: 'Intención: Mantener registro físico' }
+        ],
+        links: [
+          { source: 'Productor', target: 'Teléfono', label: 'tiene_acceso_a' },
+          { source: 'Teléfono', target: 'Desconfianza', label: 'genera' },
+          { source: 'Desconfianza', target: 'Impuestos', label: 'asociado_a' },
+          { source: 'Desconfianza', target: 'Robo de Datos', label: 'asociado_a' },
+          { source: 'Productor', target: 'Cuaderno', label: 'prefiere' },
+          { source: 'Cuaderno', target: 'Desconfianza', label: 'mitiga' }
+        ]
+      });
     } finally {
       setLoading(false);
     }

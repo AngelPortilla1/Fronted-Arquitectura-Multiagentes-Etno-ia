@@ -10,7 +10,7 @@ import { useState, useEffect, useRef } from 'react';
  * - Preparado para migración a WebSockets
  * - Cancelación automática de requests
  */
-export function useAgentsStatus() {
+export function useAgentSwarmStatus() {
   const [agents, setAgents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -128,4 +128,4 @@ export function useAgentsStatus() {
   };
 }
 
-export default useAgentsStatus;
+export default useAgentSwarmStatus;

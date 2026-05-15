@@ -18,37 +18,45 @@ export default function P3_RutaPedagogica() {
         const data = await response.json();
         setRoute(data);
       } else {
-        // Mock de datos según tu arquitectura para pruebas
-        setRoute({
-          pid: pid,
-          route_name: "Alfabetización en Soberanía de Datos",
-          risk_level: "Alto (Desconfianza detectada)",
-          steps: [
-            {
-              id: "MOD-01",
-              title: "Tus datos son tu cosecha",
-              desc: "Introducción a los derechos digitales comparándolos con la propiedad de la tierra.",
-              quote: "Él cree que si pone sus datos... el gobierno le va a cobrar más impuestos.",
-              agent: "M_curr"
-            },
-            {
-              id: "MOD-02",
-              title: "Seguridad y Candados Digitales",
-              desc: "Cómo funciona la encriptación local sin necesidad de internet constante.",
-              quote: "Le da mucho miedo usar el teléfono... le van a robar la información.",
-              agent: "M_curr"
-            }
-          ]
-        });
+        throw new Error('Backend encendido pero respondió con error o sin datos (Ej. 404).');
       }
     } catch (err) {
-      console.error(err);
+      console.warn('Backend apagado o error de conexión. Usando mock de prueba BDI.', err);
+      // Mock de datos según tu arquitectura para pruebas EXCLUSIVAMENTE como fallback
+      setRoute({
+        pid: pid,
+        route_name: "Alfabetización en Soberanía de Datos",
+        risk_level: "Alto (Desconfianza detectada)",
+        steps: [
+          {
+            id: "MOD-01",
+            title: "Tus datos son tu cosecha",
+            desc: "Introducción a los derechos digitales comparándolos con la propiedad de la tierra.",
+            quote: "Él cree que si pone sus datos... el gobierno le va a cobrar más impuestos.",
+            agent: "M_curr"
+          },
+          {
+            id: "MOD-02",
+            title: "Seguridad y Candados Digitales",
+            desc: "Cómo funciona la encriptación local sin necesidad de internet constante.",
+            quote: "Le da mucho miedo usar el teléfono... le van a robar la información.",
+            agent: "M_curr"
+          }
+        ]
+      });
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) return <div className="p-20 text-center animate-pulse text-primary font-bold">Generando ruta pedagógica...</div>;
+
+  if (!route) return (
+    <div className="p-20 text-center text-on-surface-variant">
+      <span className="material-symbols-outlined text-5xl mb-4">route</span>
+      <p className="font-headline-md text-xl">No hay ruta pedagógica generada para este productor.</p>
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
