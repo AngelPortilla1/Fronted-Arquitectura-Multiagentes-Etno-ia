@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../api/client';
 
 export default function P1_RegistrarRelato() {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ const handleSubmit = async (e) => {
     };
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/events', {
+      const response = await fetch(API_ENDPOINTS.EVENTS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -90,7 +91,10 @@ const handleSubmit = async (e) => {
       
       alert('¡Relato registrado y enviado a los agentes BDI exitosamente!');
       
-      // Limpiamos el formulario para el siguiente campesino
+      // Navegamos automáticamente al modelo mental generado para este productor
+      navigate(`/modelo-mental/${formData.pid}`);
+      
+      // Limpiamos el formulario (aunque ya habremos navegado)
       setFormData({ pid: '', relato: '', consent_data: false, consent_ai: false });
       
     } catch (err) {

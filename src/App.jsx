@@ -17,14 +17,14 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<P0_Home />} />
           <Route path="/registrar-relato" element={<P1_RegistrarRelato />} />
-          <Route path="/modelo-mental" element={<P2_ModeloMental />} />
-          <Route path="/ruta-pedagogica" element={<P3_RutaPedagogica />} />
+          <Route path="/modelo-mental/:pid" element={<P2_ModeloMental />} />
+          <Route path="/ruta-pedagogica/:pid" element={<P3_RutaPedagogica />} />
           <Route path="/revisiones" element={<P4_ColadeRevisiones />} />
           <Route path="/aprobacion-curricular" element={<P6_AprobacionCurricular />} />
           {/* F3.1: Pantalla de Segmentos Comunitarios */}
           <Route path="/segmentos" element={<P5_Segmentos />} />
           
-          <Route path="/auditoria" element={<P7_Auditoria />} />
+          <Route path="/auditoria/:pid" element={<P7_Auditoria />} />
           <Route path="/analisis-modelos" element={<MentalModelsAnalysis />} />
         </Route>
       </Routes>

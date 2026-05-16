@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { API_ENDPOINTS } from '../api/client';
 
 export default function P7_Auditoria() {
   const navigate = useNavigate();
@@ -8,7 +9,7 @@ export default function P7_Auditoria() {
   const [revokingId, setRevokingId] = useState(null);
   
   // Usamos uno de los PIDs reales de tu base de datos
-  const [targetPid, setTargetPid] = useState('productor_vereda_rosal_01'); 
+  const { pid: targetPid } = useParams(); // Obtenemos el PID a auditar desde la URL 
 
   useEffect(() => {
     fetchAuditLogs();
@@ -17,7 +18,7 @@ export default function P7_Auditoria() {
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/audit`); // Ajusta la ruta si es necesario para filtrar por PID
+      const response = await fetch(API_ENDPOINTS.AUDIT); // Ajusta la ruta si es necesario para filtrar por PID
       if (response.ok) {
         let data = await response.json();
         
@@ -51,7 +52,7 @@ export default function P7_Auditoria() {
     setRevokingId(targetPid);
     try {
       // Endpoint simulado/real de revocación
-      await fetch('http://127.0.0.1:8000/revoke', {
+      await fetch(API_ENDPOINTS.REVOKE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pid: targetPid, reason: "Solicitud directa del usuario en campo" })

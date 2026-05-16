@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS, getReviewApproveUrl } from '../api/client';
 
 export default function P4_ColadeRevisiones() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function P4_ColadeRevisiones() {
 
   const fetchPendingReviews = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/reviews?status=pending');
+      const response = await fetch(`${API_ENDPOINTS.REVIEWS}?status=pending`);
       
       if (!response.ok) {
         throw new Error('No se pudo conectar con el servidor local.');
@@ -31,7 +32,7 @@ export default function P4_ColadeRevisiones() {
 
   const handleApprove = async (reviewId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/reviews/${reviewId}/approve`, {
+      const response = await fetch(getReviewApproveUrl(reviewId), {
         method: 'POST',
       });
 
@@ -107,9 +108,23 @@ export default function P4_ColadeRevisiones() {
             >
               {/* Identificación del Productor */}
               <div className="mb-8 border-b border-outline-variant/30 pb-6">
-                <div className="inline-flex items-center gap-2 bg-primary-container/30 text-on-surface px-4 py-2 rounded-full text-sm font-label-md uppercase tracking-wide mb-4 border border-primary/20">
-                  <span className="material-symbols-outlined text-[18px] text-primary">person</span>
-                  Productor: {review.pid.replace(/_/g, ' ')}
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <div className="inline-flex items-center gap-2 bg-primary-container/30 text-on-surface px-4 py-2 rounded-full text-sm font-label-md uppercase tracking-wide border border-primary/20">
+                    <span className="material-symbols-outlined text-[18px] text-primary">person</span>
+                    Productor: {review.pid.replace(/_/g, ' ')}
+                  </div>
+                  <button 
+                    onClick={() => navigate(`/modelo-mental/${review.pid}`)}
+                    className="text-xs bg-surface-container-highest hover:bg-primary-container px-3 py-2 rounded-xl transition-colors flex items-center gap-1 border border-outline-variant/30"
+                  >
+                    <span className="material-symbols-outlined text-sm">account_tree</span> Ver Grafo BDI
+                  </button>
+                  <button 
+                    onClick={() => navigate(`/auditoria/${review.pid}`)}
+                    className="text-xs bg-surface-container-highest hover:bg-error-container/20 px-3 py-2 rounded-xl transition-colors flex items-center gap-1 border border-outline-variant/30"
+                  >
+                    <span className="material-symbols-outlined text-sm">policy</span> Auditoría
+                  </button>
                 </div>
                 <h2 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface flex items-center gap-3">
                   Ruta Sugerida: <span className="capitalize text-primary">{review.payload?.route_type || 'No especificada'}</span>

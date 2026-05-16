@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ForceGraph2D from 'react-force-graph-2d';
+import { getMentalModelUrl } from '../api/client';
 
 export default function P2_ModeloMental() {
   const navigate = useNavigate();
   const graphRef = useRef();
-  
+
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
-  const [pid, setPid] = useState('p1'); // PID de prueba (Generado por Cold Start)
+  const { pid } = useParams(); // Obtenemos el PID desde la URL dinámicamente
 
   useEffect(() => {
     fetchMentalModel();
@@ -20,14 +21,32 @@ export default function P2_ModeloMental() {
     setLoading(true);
     try {
       // Intentamos consumir el endpoint de tu arquitectura (Tarea F2.2)
-      const response = await fetch(`http://127.0.0.1:8000/participants/${pid}/mental-model`);
-      
+      const response = await fetch(getMentalModelUrl(pid));
+
       if (response.ok) {
         const data = await response.json();
-        // Garantizar que la data tenga nodes y links válidos para que react-force-graph-2d no lance TypeError
+        const getColorForKind = (kind) => {
+          switch (kind?.toLowerCase()) {
+            case 'actor': return '#1b3022';
+            case 'concept': return '#4d6453';
+            case 'belief': return '#ba1a1a';
+            case 'fear': return '#805533';
+            case 'intention': return '#7a9e32';
+            default: return '#1b3022';
+          }
+        };
+
         setGraphData({
-          nodes: Array.isArray(data.nodes) ? data.nodes : [],
-          links: Array.isArray(data.links) ? data.links : []
+          nodes: Array.isArray(data.nodes) ? data.nodes.map(n => ({
+            ...n,
+            group: n.kind || n.group || 'concept',
+            desc: n.label || n.desc || '',
+            color: n.color || getColorForKind(n.kind || n.group)
+          })) : [],
+          links: Array.isArray(data.edges) ? data.edges.map(e => ({
+            ...e,
+            label: e.relation || e.label
+          })) : (Array.isArray(data.links) ? data.links : [])
         });
       } else {
         // Fallback de demostración BDI si el backend aún no retorna el formato D3
@@ -96,7 +115,7 @@ export default function P2_ModeloMental() {
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 flex flex-col h-[calc(100vh-120px)]">
-      
+
       {/* Header */}
       <header className="mb-6 flex-shrink-0">
         <div className="flex items-center gap-3 mb-2">
@@ -117,7 +136,7 @@ export default function P2_ModeloMental() {
 
       {/* Main Content: Grafo + Panel Lateral */}
       <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0">
-        
+
         {/* Contenedor del Grafo */}
         <div className="flex-1 bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden relative group">
           {loading ? (
@@ -141,7 +160,7 @@ export default function P2_ModeloMental() {
               />
             </div>
           )}
-          
+
           {/* Leyenda flotante */}
           <div className="absolute bottom-4 left-4 bg-surface/90 backdrop-blur px-4 py-3 rounded-2xl border border-outline-variant/30 shadow-sm pointer-events-none">
             <h4 className="text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-wider">Leyenda BDI</h4>
@@ -160,7 +179,7 @@ export default function P2_ModeloMental() {
             <span className="material-symbols-outlined text-secondary">analytics</span>
             Detalle del Nodo
           </h3>
-          
+
           {selectedNode ? (
             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
               <div>
@@ -169,7 +188,7 @@ export default function P2_ModeloMental() {
                   {selectedNode.id}
                 </p>
               </div>
-              
+
               <div>
                 <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-1">Clasificación BDI</p>
                 <span className="inline-block px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-sm font-bold capitalize">

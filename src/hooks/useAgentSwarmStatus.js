@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { API_ENDPOINTS } from '../api/client';
 
 /**
  * Hook profesional para observabilidad cognitiva multi-agente
@@ -28,7 +29,7 @@ export function useAgentSwarmStatus() {
       // Crear AbortController para cancelación si es necesario
       abortControllerRef.current = new AbortController();
 
-      const response = await fetch('http://127.0.0.1:8000/agents/status', {
+      const response = await fetch(API_ENDPOINTS.AGENTS_STATUS, {
         signal: abortControllerRef.current.signal,
         headers: {
           'Accept': 'application/json',

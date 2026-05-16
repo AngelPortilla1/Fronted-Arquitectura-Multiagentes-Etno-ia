@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getRouteUrl } from '../api/client';
 
 export default function P3_RutaPedagogica() {
   const navigate = useNavigate();
   const [route, setRoute] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [pid] = useState('p1'); // PID de prueba (Generado por Cold Start)
+  const { pid } = useParams(); // PID dinámico desde la URL
 
   useEffect(() => {
     fetchRoute();
@@ -13,7 +14,7 @@ export default function P3_RutaPedagogica() {
 
   const fetchRoute = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/participants/${pid}/route`);
+      const response = await fetch(getRouteUrl(pid));
       if (response.ok) {
         const data = await response.json();
         setRoute(data);

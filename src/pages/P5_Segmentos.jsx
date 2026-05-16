@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../api/client';
 
 export default function P5_Segmentos() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function P5_Segmentos() {
     ];
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/segments');
+      const response = await fetch(API_ENDPOINTS.SEGMENTS);
       if (response.ok) {
         const data = await response.json();
         console.log("📦 Datos de segmentos recibidos del backend:", data); // <-- Para ver la estructura real en consola

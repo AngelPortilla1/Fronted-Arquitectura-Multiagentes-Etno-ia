@@ -1,0 +1,21 @@
+const BASE_URL = 'http://127.0.0.1:8000';
+
+export const API_ENDPOINTS = {
+  HEALTH: `${BASE_URL}/health`,
+  AGENTS_STATUS: `${BASE_URL}/agents/status`,
+  EVENTS: `${BASE_URL}/events`,
+  PARTICIPANTS: `${BASE_URL}/participants`,
+  SEGMENTS: `${BASE_URL}/segments`,
+  REVIEWS: `${BASE_URL}/reviews`,
+  AUDIT: `${BASE_URL}/audit`,
+  COLD_START: `${BASE_URL}/demo/cold-start`,
+  REVOKE: `${BASE_URL}/revoke`
+};
+
+export const getMentalModelUrl = (pid) => `${API_ENDPOINTS.PARTICIPANTS}/${pid}/mental-model`;
+export const getRouteUrl = (pid) => `${API_ENDPOINTS.PARTICIPANTS}/${pid}/route`;
+export const getAuditUrl = (pid) => `${API_ENDPOINTS.AUDIT}`; // El backend actual usa /audit general y se filtra en el front
+export const getReviewApproveUrl = (id) => `${API_ENDPOINTS.REVIEWS}/${id}/approve`;
+export const getReviewRejectUrl = (id) => `${API_ENDPOINTS.REVIEWS}/${id}/reject`;
+
+export default BASE_URL;

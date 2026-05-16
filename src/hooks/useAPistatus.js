@@ -1,56 +1,99 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { API_ENDPOINTS } from '../api/client';
 
+const HEALTH_URL = API_ENDPOINTS.HEALTH;
+const POLL_INTERVAL_MS = 30_000; // 30 segundos
+const TIMEOUT_MS = 3_000;        // 3 segundos de timeout
+
+/**
+ * Hook que monitorea el estado del backend ETNO-IA.
+ * Devuelve:
+ *   - isOnline  : boolean  → true si /health responde con 2xx
+ *   - loading   : boolean  → true durante la primera petición
+ *   - mode      : string   → 'Ollama' | 'Stubs' | 'Offline'
+ */
 export function useApiStatus() {
-  const [isOnline, setIsOnline] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState('Offline'); // 'Offline', 'Ollama', 'Stubs'
+  const [isOnline, setIsOnline]   = useState(false);
+  const [loading,  setLoading]    = useState(true);
+  const [mode,     setMode]       = useState('Offline');
+
+  // Ref para poder abortar el fetch en el cleanup
+  const abortRef = useRef(null);
 
   useEffect(() => {
-    // Función para verificar la salud del backend
+    let cancelled = false; // flag de cleanup
+
     const checkStatus = async () => {
+      // --- Crear AbortController con timeout manual ---
+      const controller  = new AbortController();
+      abortRef.current  = controller;
+      const timerId     = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
       try {
-        // Tarea F4.2: Consulta al endpoint /health
-        const response = await fetch('http://127.0.0.1:8000/health', {
+        const response = await fetch(HEALTH_URL, {
           method: 'GET',
-          // Tiempo de espera corto para no bloquear la UI
-          signal: AbortController.timeout(3000).signal 
+          signal: controller.signal,
         });
-        
+
+        clearTimeout(timerId);
+
+        if (cancelled) return;
+
         if (response.ok) {
-          setIsOnline(true);
+          // Leer JSON para saber el proveedor LLM activo
+          let backendMode = 'Ollama'; // valor por defecto si no hay campo
           try {
             const data = await response.json();
-            // Asumimos que el backend podría enviar un campo 'mode', 'llm', 'backend_mode', o similar.
-            // Ajustar según el JSON real que devuelva /health.
-            const backendMode = data.mode || data.llm_mode || data.status || 'Online';
-            if (backendMode.toLowerCase().includes('stub')) {
-              setMode('Stubs');
-            } else {
-              setMode('Ollama'); // Por defecto si está encendido y no dice stub
+            // El backend devuelve: { status: "ok", llm_provider: "ollama" | "stub" | ... }
+            const raw = (data.llm_provider || data.mode || '').toLowerCase();
+            if (raw.includes('stub')) {
+              backendMode = 'Stubs';
+            } else if (raw.includes('ollama') || raw.includes('langchain')) {
+              backendMode = 'Ollama';
+            } else if (raw) {
+              // Cualquier otro proveedor conocido (ej. "openai")
+              backendMode = raw.charAt(0).toUpperCase() + raw.slice(1);
             }
-          } catch (e) {
-            setMode('Online');
+          } catch {
+            // El JSON no llegó bien → dejamos 'Ollama' como fallback
           }
+
+          setIsOnline(true);
+          setMode(backendMode);
+          console.log('[useApiStatus] ✅ Backend online. Modo:', backendMode);
         } else {
           setIsOnline(false);
           setMode('Offline');
+          console.warn('[useApiStatus] ⚠️ Backend respondió con status:', response.status);
         }
       } catch (err) {
+        clearTimeout(timerId);
+        if (cancelled) return;
+
         setIsOnline(false);
         setMode('Offline');
+
+        if (err.name === 'AbortError') {
+          console.warn('[useApiStatus] ⏱️ Timeout: el backend no respondió en', TIMEOUT_MS, 'ms');
+        } else {
+          console.warn('[useApiStatus] ❌ No se pudo conectar al backend:', err.message);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    // Ejecutar inmediatamente al cargar
+    // Ejecución inmediata
     checkStatus();
 
-    // Configurar el Polling (Consulta cada 30 segundos)
-    const interval = setInterval(checkStatus, 30000);
+    // Polling cada 30 s
+    const intervalId = setInterval(checkStatus, POLL_INTERVAL_MS);
 
-    // Limpiar el intervalo al desmontar el componente
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+      if (abortRef.current) abortRef.current.abort();
+    };
   }, []);
 
   return { isOnline, loading, mode };

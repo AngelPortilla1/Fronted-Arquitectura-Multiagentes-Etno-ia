@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
+import { API_ENDPOINTS } from '../api/client';
 import { useApiStatus } from '../hooks/useApiStatus';
 import { useAgentSwarmStatus } from '../hooks/useAgentSwarmStatus';
 import { AgentStatusDropdown } from './agents/AgentStatusDropdown';
@@ -15,12 +16,9 @@ export default function Layout() {
 
   const handleColdStart = async () => {
     setIsColdStarting(true);
-    const url = useStub 
-      ? 'http://127.0.0.1:8000/demo/cold-start?use_stub=true'
-      : 'http://127.0.0.1:8000/demo/cold-start';
-
+    
     try {
-      const response = await fetch(url, {
+      const response = await fetch(`${API_ENDPOINTS.COLD_START}?use_stub=${useStub}`, {
         method: 'POST'
       });
       if (response.ok) {
