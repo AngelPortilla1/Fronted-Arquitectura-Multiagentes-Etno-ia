@@ -10,7 +10,7 @@ export default function P2_ModeloMental() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
-  const [pid, setPid] = useState('productor_vereda_rosal_01'); // PID de prueba
+  const [pid, setPid] = useState('p1'); // PID de prueba (Generado por Cold Start)
 
   useEffect(() => {
     fetchMentalModel();

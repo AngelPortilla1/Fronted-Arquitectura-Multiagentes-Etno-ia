@@ -5,7 +5,7 @@ export default function P3_RutaPedagogica() {
   const navigate = useNavigate();
   const [route, setRoute] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [pid] = useState('productor_vereda_rosal_01'); // PID de prueba
+  const [pid] = useState('p1'); // PID de prueba (Generado por Cold Start)
 
   useEffect(() => {
     fetchRoute();
@@ -13,7 +13,7 @@ export default function P3_RutaPedagogica() {
 
   const fetchRoute = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/route?pid=${pid}`);
+      const response = await fetch(`http://127.0.0.1:8000/participants/${pid}/route`);
       if (response.ok) {
         const data = await response.json();
         setRoute(data);
@@ -96,12 +96,12 @@ export default function P3_RutaPedagogica() {
             {/* Contenido del Módulo */}
             <div className="w-[calc(100%-4rem)] md:w-[45%] bg-surface/60 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-3">
-                <span className="text-xs font-bold text-primary uppercase tracking-widest">{step.id}</span>
-                <span className="text-[10px] bg-surface-container-high px-2 py-1 rounded text-on-surface-variant font-mono">Agente: {step.agent}</span>
+                <span className="text-xs font-bold text-primary uppercase tracking-widest">{step.id || step.module_id}</span>
+                <span className="text-[10px] bg-surface-container-high px-2 py-1 rounded text-on-surface-variant font-mono">Agente: {step.agent || "APLAN"}</span>
               </div>
               <h3 className="text-xl font-bold text-on-surface mb-2">{step.title}</h3>
               <p className="text-on-surface-variant mb-6 leading-relaxed italic">
-                "{step.desc}"
+                "{step.desc || step.rationale}"
               </p>
 
               {/* Tarea F4.1: EvidenceQuote (Trazabilidad Visual) */}
@@ -111,7 +111,7 @@ export default function P3_RutaPedagogica() {
                   <span className="material-symbols-outlined text-sm">visibility</span> Evidencia del Relato:
                 </p>
                 <p className="text-sm text-on-secondary-container leading-snug">
-                  "...{step.quote}..."
+                  "...{step.quote || step.need}..."
                 </p>
               </div>
             </div>

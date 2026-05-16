@@ -1,4 +1,5 @@
-// Footer integrado con el estilo de ETNO-IA Rural 2.0
+import { Link } from 'react-router-dom';
+
 const Footer = () => (
   <footer className="w-full px-margin-mobile md:px-margin-desktop pb-8 mt-auto">
     <div className="max-w-container-max mx-auto">
@@ -10,7 +11,7 @@ const Footer = () => (
           {/* Branding & Info de Tesis */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <h4 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary-container bg-clip-text text-transparent tracking-tight">
-              ETNO-IA2.0
+              ETNO-IA 2.0
             </h4>
             <p className="text-xs text-on-surface-variant/60 mt-1 font-medium">
               © 2026 · ETNO-IA Rural 2.0 · Arquitectura Multiagentes<br />
@@ -21,16 +22,29 @@ const Footer = () => (
 
           {/* Navegación Secundaria */}
           <nav className="flex gap-8">
-            {['Documentación', 'Modelos Mentales', 'XAI'].map((link) => (
-              <a
-                key={link}
-                href="#"
-                className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group"
-              >
-                {link}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-              </a>
-            ))}
+            <Link
+              to="/documentacion"
+              className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group"
+            >
+              Documentación
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            
+            <Link
+              to="/analisis-modelos"
+              className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group"
+            >
+              Modelos Mentales
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+
+            <Link
+              to="/xai"
+              className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group"
+            >
+              XAI
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+            </Link>
           </nav>
 
           {/* Indicador de "Sistema Operativo" (Coherencia con Header) */}
@@ -52,4 +66,4 @@ const Footer = () => (
   </footer>
 );
 
-export default Footer;
+export default Footer;

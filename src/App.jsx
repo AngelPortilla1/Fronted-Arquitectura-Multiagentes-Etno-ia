@@ -8,6 +8,7 @@ import P4_ColadeRevisiones from './pages/P4_ColadeRevisiones';
 import P5_Segmentos from './pages/P5_Segmentos'; 
 import P6_AprobacionCurricular from './pages/P6_AprobacionCurricular';
 import P7_Auditoria from './pages/P7_Auditoria';
+import MentalModelsAnalysis from './pages/MentalModelsAnalysis';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/segmentos" element={<P5_Segmentos />} />
           
           <Route path="/auditoria" element={<P7_Auditoria />} />
+          <Route path="/analisis-modelos" element={<MentalModelsAnalysis />} />
         </Route>
       </Routes>
     </BrowserRouter>
