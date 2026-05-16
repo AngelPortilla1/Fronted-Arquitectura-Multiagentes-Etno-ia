@@ -16,6 +16,7 @@ export function useApiStatus() {
   const [isOnline, setIsOnline]   = useState(false);
   const [loading,  setLoading]    = useState(true);
   const [mode,     setMode]       = useState('Offline');
+  const [modelName, setModelName] = useState('stub');
 
   // Ref para poder abortar el fetch en el cleanup
   const abortRef = useRef(null);
@@ -41,30 +42,33 @@ export function useApiStatus() {
 
         if (response.ok) {
           // Leer JSON para saber el proveedor LLM activo
-          let backendMode = 'Ollama'; // valor por defecto si no hay campo
+          let backendMode = 'Ollama'; 
+          let backendModel = 'stub';
+
           try {
             const data = await response.json();
-            // El backend devuelve: { status: "ok", llm_provider: "ollama" | "stub" | ... }
-            const raw = (data.llm_provider || data.mode || '').toLowerCase();
+            // El backend devuelve: { status: "ok", llm_provider: "ollama", llm_model: "qwen..." }
+            const raw = (data.llm_provider || '').toLowerCase();
+            backendModel = data.llm_model || 'stub';
+
             if (raw.includes('stub')) {
               backendMode = 'Stubs';
             } else if (raw.includes('ollama') || raw.includes('langchain')) {
               backendMode = 'Ollama';
             } else if (raw) {
-              // Cualquier otro proveedor conocido (ej. "openai")
               backendMode = raw.charAt(0).toUpperCase() + raw.slice(1);
             }
           } catch {
-            // El JSON no llegó bien → dejamos 'Ollama' como fallback
+            // Error en JSON
           }
 
           setIsOnline(true);
           setMode(backendMode);
-          console.log('[useApiStatus] ✅ Backend online. Modo:', backendMode);
+          setModelName(backendModel);
+          console.log('[useApiStatus] ✅ Backend online. Modo:', backendMode, 'Modelo:', backendModel);
         } else {
           setIsOnline(false);
           setMode('Offline');
-          console.warn('[useApiStatus] ⚠️ Backend respondió con status:', response.status);
         }
       } catch (err) {
         clearTimeout(timerId);
@@ -72,12 +76,6 @@ export function useApiStatus() {
 
         setIsOnline(false);
         setMode('Offline');
-
-        if (err.name === 'AbortError') {
-          console.warn('[useApiStatus] ⏱️ Timeout: el backend no respondió en', TIMEOUT_MS, 'ms');
-        } else {
-          console.warn('[useApiStatus] ❌ No se pudo conectar al backend:', err.message);
-        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -96,5 +94,5 @@ export function useApiStatus() {
     };
   }, []);
 
-  return { isOnline, loading, mode };
+  return { isOnline, loading, mode, modelName };
 }

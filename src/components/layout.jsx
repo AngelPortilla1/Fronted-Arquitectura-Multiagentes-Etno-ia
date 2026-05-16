@@ -9,7 +9,7 @@ import LogoEtnoia from '../assets/LogoEtnoia.png';
 
 export default function Layout() {
   // Uso del sensor real para el principio Offline-first
-  const { isOnline, loading, mode } = useApiStatus();
+  const { isOnline, loading, mode, modelName } = useApiStatus();
   const { agents, isLoading } = useAgentSwarmStatus();
   const [isColdStarting, setIsColdStarting] = useState(false);
   const [useStub, setUseStub] = useState(true);
@@ -73,7 +73,7 @@ export default function Layout() {
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-on-tertiary-container' : 'bg-error'}`}></span>
               </div>
               <span className={`font-label-md text-label-md ${isOnline ? 'text-on-surface-variant' : 'text-error font-bold'}`}>
-                IA Core: {loading ? 'Sincronizando...' : isOnline ? mode : 'Offline'}
+                IA Core: {loading ? 'Sincronizando...' : isOnline ? `${mode} (${modelName})` : 'Offline'}
               </span>
             </div>
             

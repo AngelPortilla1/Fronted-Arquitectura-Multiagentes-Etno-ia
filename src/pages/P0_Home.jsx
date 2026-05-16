@@ -42,7 +42,7 @@ export default function P0_Home() {
             </div>
           </div>
           
-          <div className="flex gap-3 w-full md:w-auto mt-6 md:mt-0">
+          <div className="flex gap-3 w-full md:w-auto mt-6 md:mt-0 flex-wrap md:flex-nowrap">
             <button 
               onClick={() => handleSearch('modelo-mental')}
               disabled={!pidSearch.trim()}
@@ -50,6 +50,14 @@ export default function P0_Home() {
             >
               <span className="material-symbols-outlined">account_tree</span>
               Modelo
+            </button>
+            <button 
+              onClick={() => handleSearch('ruta-pedagogica')}
+              disabled={!pidSearch.trim()}
+              className="flex-1 md:flex-none bg-secondary text-on-secondary px-6 py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined">route</span>
+              Ruta
             </button>
             <button 
               onClick={() => handleSearch('auditoria')}
@@ -67,7 +75,7 @@ export default function P0_Home() {
       </div>
 
       {/* Role Selection Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full max-w-[1400px]">
         
         {/* Card 1: Facilitador Territorial */}
         <Link to="/registrar-relato" className="group relative flex flex-col items-start p-8 rounded-3xl bg-surface/60 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(27,48,34,0.1)] transition-all duration-500 hover:-translate-y-2 text-left overflow-hidden">
@@ -116,7 +124,7 @@ export default function P0_Home() {
         </Link>
 
         {/* Card 3: Auditor de Datos */}
-        <Link to="/auditoria" className="group relative flex flex-col items-start p-8 rounded-3xl bg-surface/60 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(27,48,34,0.15)] transition-all duration-500 hover:-translate-y-2 text-left overflow-hidden">
+        <Link to="/auditoria/p1" className="group relative flex flex-col items-start p-8 rounded-3xl bg-surface/60 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(27,48,34,0.15)] transition-all duration-500 hover:-translate-y-2 text-left overflow-hidden">
           <div className="absolute inset-0 bg-surface-tint opacity-0 group-hover:opacity-5 transition-opacity duration-500"></div>
           <div className="absolute top-0 right-0 w-32 h-32 bg-surface-tint opacity-5 rounded-bl-[100px] -mr-10 -mt-10"></div>
           
@@ -135,6 +143,29 @@ export default function P0_Home() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-on-surface"></span>
             </div>
             <span className="font-label-md text-label-md text-on-primary-fixed-variant">Seguridad Activa</span>
+          </div>
+        </Link>
+
+        {/* Card 4: Coordinador Territorial */}
+        <Link to="/segmentos" className="group relative flex flex-col items-start p-8 rounded-3xl bg-surface/60 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(27,48,34,0.15)] transition-all duration-500 hover:-translate-y-2 text-left overflow-hidden">
+          <div className="absolute inset-0 bg-tertiary opacity-0 group-hover:opacity-5 transition-opacity duration-500"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-tertiary opacity-5 rounded-bl-[100px] -mr-10 -mt-10"></div>
+          
+          <div className="w-14 h-14 rounded-2xl bg-tertiary text-on-primary flex items-center justify-center mb-8 shadow-inner">
+            <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>public</span>
+          </div>
+          
+          <h2 className="font-headline-md text-[24px] font-semibold text-on-surface mb-3">Coordinador Territorial</h2>
+          <p className="font-body-md text-body-md text-on-surface-variant mb-8 opacity-80 line-clamp-3">
+            Análisis de inteligencia colectiva. Identificación de segmentos comunitarios, visualización de brechas digitales y toma de decisiones a nivel regional.
+          </p>
+          
+          <div className="mt-auto flex items-center gap-2 bg-tertiary-container/30 px-3 py-1.5 rounded-full border border-tertiary-container w-full">
+            <div className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-tertiary"></span>
+            </div>
+            <span className="font-label-md text-label-md text-on-tertiary-container">Análisis Macro</span>
           </div>
         </Link>
 

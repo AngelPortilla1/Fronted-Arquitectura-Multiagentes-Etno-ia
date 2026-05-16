@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getRouteUrl } from '../api/client';
+import { useApiStatus } from '../hooks/useApiStatus';
 
 export default function P3_RutaPedagogica() {
   const navigate = useNavigate();
+  const { mode } = useApiStatus();
   const [route, setRoute] = useState(null);
   const [loading, setLoading] = useState(true);
   const { pid } = useParams(); // PID dinámico desde la URL
+
+  const isStubMode = mode === 'Stubs';
 
   useEffect(() => {
     fetchRoute();
@@ -65,23 +69,74 @@ export default function P3_RutaPedagogica() {
       {/* Header */}
       <header className="mb-10">
         <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => navigate('/modelo-mental')} className="text-on-surface-variant hover:text-primary transition-colors">
+          <button onClick={() => navigate(`/modelo-mental/${pid}`)} className="text-on-surface-variant hover:text-primary transition-colors">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
           <h1 className="font-display-lg text-3xl font-bold text-on-surface">Propuesta Pedagógica</h1>
         </div>
         
-        <div className="bg-primary-container/30 border border-primary-fixed p-6 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="bg-white border border-outline-variant/30 p-8 rounded-[32px] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-2 h-full bg-primary"></div>
           <div>
-            <h2 className="text-xl font-bold text-primary mb-1">{route.route_name}</h2>
-            <p className="text-on-surface-variant">Ruta personalizada generada para <span className="font-bold">{route.pid}</span></p>
+            <h2 className="text-3xl font-bold text-primary mb-2">Ruta {route.route_type} — {((route.score || 0) * 100).toFixed(0)}%</h2>
+            <p className="text-on-surface-variant flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">person</span>
+              Ruta personalizada generada para <span className="font-bold text-on-surface">{route.pid}</span>
+            </p>
           </div>
-          <div className="flex items-center gap-2 bg-error-container/20 px-4 py-2 rounded-full border border-error/20">
-            <span className="material-symbols-outlined text-error text-sm">warning</span>
-            <span className="text-sm font-bold text-error uppercase">{route.risk_level}</span>
+          <div className="flex flex-col items-end gap-3">
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase ${
+              route.risks?.length > 0 
+                ? "bg-error-container/10 border-error/20 text-error" 
+                : "bg-primary-container/5 border-primary/20 text-primary"
+            }`}>
+              <span className="material-symbols-outlined text-sm">
+                {route.risks?.length > 0 ? "warning" : "verified_user"}
+              </span>
+              <span className="tracking-wide">
+                {route.risks?.length > 0 ? route.risks[0] : "Sin riesgos detectados"}
+              </span>
+            </div>
+            {/* Indicador de uso de LLM */}
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase transition-all ${
+              !isStubMode 
+                ? "bg-tertiary-fixed text-on-tertiary-fixed border-tertiary/20 shadow-sm" 
+                : "bg-surface-container-high border-outline-variant/30 text-on-surface-variant"
+            }`}>
+              <span className="material-symbols-outlined text-sm">
+                {!isStubMode ? "psychology" : "settings"}
+              </span>
+              {!isStubMode ? "Generado por LLM (Ollama)" : "Heurística (Stub)"}
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Justificación del Agente AEXPL */}
+      {route.explanation && (
+        <div className="mb-12 bg-white border border-outline-variant/20 p-6 rounded-3xl relative overflow-hidden shadow-sm">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-tertiary-fixed"></div>
+          <div className="flex items-start gap-4">
+            <div className="bg-tertiary-container/5 p-3 rounded-2xl shrink-0 border border-tertiary/10">
+              <span className="material-symbols-outlined text-tertiary text-2xl">auto_awesome</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-on-surface mb-2 flex items-center gap-2">
+                Razonamiento del Agente Explicador (AEXPL)
+                {!isStubMode && (
+                  <span className="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border border-tertiary/20">LLM Activo</span>
+                )}
+                {isStubMode && (
+                  <span className="text-[10px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full uppercase tracking-wider font-medium border border-outline-variant/30">Heurística Activa</span>
+                )}
+              </h3>
+              <p className="text-on-surface-variant leading-relaxed italic">
+                "{route.explanation}"
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Timeline de la Ruta */}
       <div className="space-y-12 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary/20 before:via-primary before:to-primary/20">

@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS, getReviewApproveUrl } from '../api/client';
+import { useApiStatus } from '../hooks/useApiStatus';
 
 export default function P4_ColadeRevisiones() {
   const navigate = useNavigate();
+  const { mode } = useApiStatus();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Determinar si estamos en modo real o stub
+  const isStubMode = mode === 'Stubs';
 
   useEffect(() => {
     fetchPendingReviews();
@@ -108,22 +113,22 @@ export default function P4_ColadeRevisiones() {
             >
               {/* Identificación del Productor */}
               <div className="mb-8 border-b border-outline-variant/30 pb-6">
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <div className="inline-flex items-center gap-2 bg-primary-container/30 text-on-surface px-4 py-2 rounded-full text-sm font-label-md uppercase tracking-wide border border-primary/20">
+                <div className="flex flex-wrap items-center gap-3 mb-6">
+                  <div className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest border border-outline-variant/30 shadow-sm">
                     <span className="material-symbols-outlined text-[18px] text-primary">person</span>
                     Productor: {review.pid.replace(/_/g, ' ')}
                   </div>
                   <button 
                     onClick={() => navigate(`/modelo-mental/${review.pid}`)}
-                    className="text-xs bg-surface-container-highest hover:bg-primary-container px-3 py-2 rounded-xl transition-colors flex items-center gap-1 border border-outline-variant/30"
+                    className="text-xs bg-primary text-on-primary px-4 py-2.5 rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-2 font-bold"
                   >
-                    <span className="material-symbols-outlined text-sm">account_tree</span> Ver Grafo BDI
+                    <span className="material-symbols-outlined text-[18px]">account_tree</span> Ver Grafo BDI
                   </button>
                   <button 
                     onClick={() => navigate(`/auditoria/${review.pid}`)}
-                    className="text-xs bg-surface-container-highest hover:bg-error-container/20 px-3 py-2 rounded-xl transition-colors flex items-center gap-1 border border-outline-variant/30"
+                    className="text-xs bg-surface-container-highest text-on-surface hover:bg-error-container/10 px-4 py-2.5 rounded-full transition-all flex items-center gap-2 border border-outline-variant/30 font-bold"
                   >
-                    <span className="material-symbols-outlined text-sm">policy</span> Auditoría
+                    <span className="material-symbols-outlined text-[18px]">policy</span> Auditoría
                   </button>
                 </div>
                 <h2 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface flex items-center gap-3">
@@ -132,12 +137,28 @@ export default function P4_ColadeRevisiones() {
               </div>
 
               {/* Justificación de la IA */}
-              <div className="mb-8">
+              <div className="mb-8 relative">
                 <h3 className="font-label-md text-secondary mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <span className="material-symbols-outlined">psychology</span>
-                  Justificación del Sistema BDI
+                  <span className="material-symbols-outlined">
+                    {!isStubMode ? "psychology" : "settings"}
+                  </span>
+                  Justificación de AEXPL
+                  {!isStubMode && (
+                    <span className="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full ml-2 border border-tertiary/20 font-bold">
+                      GENERADO POR LLM (OLLAMA)
+                    </span>
+                  )}
+                  {isStubMode && (
+                    <span className="text-[10px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full ml-2 border border-outline-variant/30 font-medium">
+                      HEURÍSTICA (STUB)
+                    </span>
+                  )}
                 </h3>
-                <p className="font-body-lg text-on-surface-variant leading-relaxed bg-surface-container-highest p-5 rounded-2xl border border-outline-variant/30 italic">
+                <p className={`font-body-lg text-on-surface-variant leading-relaxed p-5 rounded-2xl border italic shadow-sm transition-colors ${
+                  !isStubMode
+                    ? "bg-white border-tertiary/20 shadow-tertiary/5"
+                    : "bg-surface-container-highest/50 border-outline-variant/30"
+                }`}>
                   "{review.payload?.explanation || 'Sin justificación disponible'}"
                 </p>
               </div>
