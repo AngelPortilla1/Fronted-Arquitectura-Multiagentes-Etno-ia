@@ -106,7 +106,7 @@ export default function P3_RutaPedagogica() {
               <span className="material-symbols-outlined text-sm">
                 {!isStubMode ? "psychology" : "settings"}
               </span>
-              {!isStubMode ? "Generado por LLM (Ollama)" : "Heurística (Stub)"}
+              {!isStubMode ? `Generado por LLM (${mode})` : "Heurística (Stub)"}
             </div>
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function P3_RutaPedagogica() {
       <div className="space-y-12 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary/20 before:via-primary before:to-primary/20">
         
         {route.steps.map((step, index) => (
-          <div key={step.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+          <div key={step.id || step.module_id || index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
             
             {/* El punto de la línea de tiempo */}
             <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-primary text-on-primary shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_ENDPOINTS } from '../api/client';
+import { getRevokeUrl } from '../api/client';
 
 export default function P7_Auditoria() {
   const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [revokingId, setRevokingId] = useState(null);
+  const [revokeScope, setRevokeScope] = useState('');  // '' = revocación total
   
   // Usamos uno de los PIDs reales de tu base de datos
   const { pid: targetPid } = useParams(); // Obtenemos el PID a auditar desde la URL 
@@ -41,27 +42,34 @@ export default function P7_Auditoria() {
   };
 
   const handleRevoke = async () => {
+    const scopeLabel = revokeScope
+      ? `solo el alcance "${revokeScope}"`
+      : 'TODOS los datos (relato, modelo mental BDI y ruta curricular)';
+
     const confirmacion = window.confirm(
-      "⚠️ ATENCIÓN: Esta acción es irreversible.\n\n" +
-      `¿Está seguro que el productor ${targetPid} ha solicitado la revocación de su consentimiento? ` +
-      "Esto eliminará su relato, su modelo mental BDI y su ruta curricular del sistema."
+      `⚠️ ATENCIÓN: Esta acción es irreversible.\n\n` +
+      `¿Confirma que el productor "${targetPid}" ha solicitado revocar ${scopeLabel}?`
     );
 
     if (!confirmacion) return;
 
     setRevokingId(targetPid);
     try {
-      // Endpoint simulado/real de revocación
-      await fetch(API_ENDPOINTS.REVOKE, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pid: targetPid, reason: "Solicitud directa del usuario en campo" })
-      });
-      alert("✅ Datos revocados exitosamente. El perfil ha sido purgado de la arquitectura BDI.");
-      navigate('/'); 
+      const url = getRevokeUrl(
+        targetPid,
+        revokeScope || null,
+        'Solicitud directa del operador en campo'
+      );
+      const response = await fetch(url, { method: 'POST' });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || `Error ${response.status}`);
+      }
+      alert(`✅ Revocación completada para "${targetPid}". Alcance: ${scopeLabel}.`);
+      navigate('/');
     } catch (err) {
       console.error(err);
-      alert("Error de conexión al intentar revocar los datos.");
+      alert(`Error al revocar: ${err.message}`);
       setRevokingId(null);
     }
   };
@@ -133,27 +141,43 @@ export default function P7_Auditoria() {
       </header>
 
       {/* Panel de Revocación (Zona Peligrosa) */}
-      <div className="mb-8 bg-error-container/10 border border-error/30 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">
-        <div>
-          <h3 className="font-headline-md text-error flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined">warning</span>
-            Derecho al Olvido (Revocación)
-          </h3>
-          <p className="text-sm text-on-surface-variant font-body-md">
-            Si el productor {targetPid.replace(/_/g, ' ')} retira su consentimiento, utilice esta acción para purgar sus datos brutos y modelos derivados del sistema, asegurando el cumplimiento ético.
-          </p>
+      <div className="mb-8 bg-error-container/10 border border-error/30 p-6 rounded-3xl flex flex-col gap-5 shrink-0">
+        <div className="flex items-start gap-3">
+          <span className="material-symbols-outlined text-error text-3xl mt-0.5">warning</span>
+          <div>
+            <h3 className="font-headline-md text-error mb-1">Derecho al Olvido (Revocación de Consentimiento)</h3>
+            <p className="text-sm text-on-surface-variant font-body-md">
+              Si <strong>{targetPid.replace(/_/g, ' ')}</strong> retira su consentimiento, seleccione el alcance y confirme la purga de datos.
+            </p>
+          </div>
         </div>
-        <button 
-          onClick={handleRevoke}
-          disabled={revokingId === targetPid}
-          className="bg-error hover:bg-[#93000a] text-on-error px-6 py-3 rounded-xl font-label-md transition-colors flex items-center gap-2 shrink-0 shadow-sm"
-        >
-          {revokingId === targetPid ? (
-            <><span className="animate-spin material-symbols-outlined">sync</span> Purgando...</>
-          ) : (
-            <><span className="material-symbols-outlined">delete_forever</span> Revocar Consentimiento</>
-          )}
-        </button>
+
+        {/* Selector de alcance */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <select
+            value={revokeScope}
+            onChange={(e) => setRevokeScope(e.target.value)}
+            disabled={revokingId === targetPid}
+            className="flex-1 bg-surface border border-error/40 text-on-surface rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-error transition-all"
+          >
+            <option value="">⚠️ Revocación total (todos los datos)</option>
+            <option value="raw_capture">Solo almacenamiento (raw_capture)</option>
+            <option value="semantic_processing">Solo procesamiento IA (semantic_processing)</option>
+            <option value="graph_derivative">Solo modelo mental BDI (graph_derivative)</option>
+          </select>
+
+          <button
+            onClick={handleRevoke}
+            disabled={revokingId === targetPid}
+            className="bg-error hover:bg-[#93000a] text-on-error px-6 py-3 rounded-xl font-label-md transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm disabled:opacity-60"
+          >
+            {revokingId === targetPid ? (
+              <><span className="animate-spin material-symbols-outlined">sync</span> Purgando...</>
+            ) : (
+              <><span className="material-symbols-outlined">delete_forever</span> Revocar Consentimiento</>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Cadena de Auditoría (Línea de tiempo técnica real) */}

@@ -9,7 +9,7 @@ export const API_ENDPOINTS = {
   REVIEWS: `${BASE_URL}/reviews`,
   AUDIT: `${BASE_URL}/audit`,
   COLD_START: `${BASE_URL}/demo/cold-start`,
-  REVOKE: `${BASE_URL}/revoke`
+  REVOKE: `${BASE_URL}/participants`  // Se usa con getRevokeUrl(pid)
 };
 
 export const getMentalModelUrl = (pid) => `${API_ENDPOINTS.PARTICIPANTS}/${pid}/mental-model`;
@@ -17,5 +17,12 @@ export const getRouteUrl = (pid) => `${API_ENDPOINTS.PARTICIPANTS}/${pid}/route`
 export const getAuditUrl = (pid) => `${API_ENDPOINTS.AUDIT}`; // El backend actual usa /audit general y se filtra en el front
 export const getReviewApproveUrl = (id) => `${API_ENDPOINTS.REVIEWS}/${id}/approve`;
 export const getReviewRejectUrl = (id) => `${API_ENDPOINTS.REVIEWS}/${id}/reject`;
+export const getRevokeUrl = (pid, scope = null, reason = null) => {
+  const params = new URLSearchParams();
+  if (scope) params.set('scope', scope);
+  if (reason) params.set('reason', reason);
+  const query = params.toString();
+  return `${BASE_URL}/participants/${pid}/revoke${query ? '?' + query : ''}`;
+};
 
 export default BASE_URL;

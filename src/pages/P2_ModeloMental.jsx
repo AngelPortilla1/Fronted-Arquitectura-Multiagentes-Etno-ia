@@ -187,6 +187,98 @@ function NodePanel({ node, edges, nodes, onClose }) {
   );
 }
 
+// ─── Panel: Relato + Evidencias ─────────────────────────────────────────────
+function NarrativePanel({ evidenceRefs = [], contradictions = [] }) {
+  if (evidenceRefs.length === 0)
+    return (
+      <div className="flex flex-col items-center justify-center h-full opacity-50 gap-2 text-center px-4 py-8">
+        <span className="material-symbols-outlined text-3xl text-on-surface-variant">article</span>
+        <p className="text-xs text-on-surface-variant">Sin fragmentos de relato disponibles.</p>
+      </div>
+    );
+  return (
+    <div className="flex flex-col gap-3 overflow-y-auto max-h-64 pr-1">
+      {evidenceRefs.slice(0, 6).map((ref, i) => (
+        <div key={i} className="p-3 rounded-xl bg-surface border border-outline-variant/30 text-xs leading-relaxed">
+          <p className="text-on-surface italic mb-1">"{ref.quote?.slice(0, 120)}{ref.quote?.length > 120 ? '…' : ''}"</p>
+          <div className="flex items-center gap-2 flex-wrap mt-1">
+            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+              ref.kind === 'direct' ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-tertiary-fixed text-on-tertiary-fixed'
+            }`}>{ref.kind === 'direct' ? 'Directa' : 'Inferida'}</span>
+            <span className="text-on-surface-variant">{Math.round((ref.confidence ?? 0.5) * 100)}% conf.</span>
+          </div>
+        </div>
+      ))}
+      {contradictions.length > 0 && (
+        <div className="p-3 rounded-xl bg-error-container/20 border border-error/20 text-xs">
+          <p className="font-bold text-error flex items-center gap-1 mb-1">
+            <span className="material-symbols-outlined text-[14px]">warning</span>
+            {contradictions.length} contradicción(es) detectada(s)
+          </p>
+          {contradictions.map((c, i) => (
+            <p key={i} className="text-on-surface-variant">{c.reason?.slice(0, 80)}</p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Panel: Lectura del Sistema (tupla Mᵢ) ───────────────────────────────────
+function TupleReadingPanel({ values = {}, literacy = {}, uncertaintySources = {}, confidence = 0.5, revision = 1, nodes = [], edges = [] }) {
+  const tupleItems = [
+    {
+      sym: 'Gᵢ',
+      label: 'Grafo de Conocimiento',
+      color: 'text-primary',
+      bg: 'bg-primary-container/20 border-primary-container/40',
+      content: `${nodes.length} nodos · ${edges.length} relaciones · Rev. ${revision}`,
+    },
+    {
+      sym: 'vᵢ',
+      label: 'Valores Culturales',
+      color: 'text-secondary',
+      bg: 'bg-secondary-container/20 border-secondary-container/40',
+      content: Object.keys(values).length > 0
+        ? Object.entries(values).map(([k, v]) => `${k} (${Math.round(v * 100)}%)`).join(' · ')
+        : 'Sin valores explícitos registrados.',
+    },
+    {
+      sym: 'ℓᵢ',
+      label: 'Perfil de Alfabetización',
+      color: 'text-on-tertiary-container',
+      bg: 'bg-tertiary-container/20 border-tertiary-container/40',
+      content: Object.keys(literacy).length > 0
+        ? Object.entries(literacy).map(([k, v]) => `${k}: ${Math.round(v * 100)}%`).join(' · ')
+        : 'Perfil de alfabetización base incipiente.',
+    },
+    {
+      sym: 'qᵢ',
+      label: 'Incertidumbre Global',
+      color: 'text-on-surface-variant',
+      bg: 'bg-surface-container border-outline-variant/40',
+      content: Object.keys(uncertaintySources).length > 0
+        ? Object.entries(uncertaintySources).map(([k, v]) => `${k}: ${Math.round(v * 100)}%`).join(' · ')
+        : `Confianza global: ${Math.round(confidence * 100)}%`,
+    },
+  ];
+  return (
+    <div className="flex flex-col gap-3">
+      {tupleItems.map(({ sym, label, color, bg, content }) => (
+        <div key={sym} className={`flex items-start gap-3 p-3 rounded-2xl border ${bg}`}>
+          <div className={`shrink-0 w-9 h-9 rounded-xl bg-white/60 border ${bg.split(' ')[1]} flex items-center justify-center`}>
+            <span className={`font-mono text-base font-black ${color}`}>{sym}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`font-bold text-[11px] uppercase tracking-wide ${color}`}>{label}</p>
+            <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">{content}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Leyenda ─────────────────────────────────────────────────────────────────
 function Legend({ kinds }) {
   return (
@@ -234,12 +326,14 @@ export default function P2_ModeloMental() {
   const graphRef = useRef();
   const { pid } = useParams();
 
-  const [rawData, setRawData] = useState({ nodes: [], edges: [] });
+  const [rawData, setRawData] = useState({ nodes: [], edges: [], values: {}, literacy: {}, uncertainty_sources: {}, evidence_refs: [], contradiction_flags: [], confidence: 0.5, revision: 1 });
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
   const [selectedNode, setSelectedNode] = useState(null);
   const [activeKinds, setActiveKinds] = useState(new Set());
   const [showInferred, setShowInferred] = useState(true);
+  const [leftOpen, setLeftOpen] = useState(true);
+  const [leftTab, setLeftTab] = useState('relato'); // 'relato' | 'tupla'
   const [dimensions, setDimensions] = useState({ w: 600, h: 480 });
   const containerRef = useRef();
 
@@ -262,7 +356,17 @@ export default function P2_ModeloMental() {
       const res = await fetch(getMentalModelUrl(pid));
       if (res.ok) {
         const data = await res.json();
-        setRawData({ nodes: data.nodes ?? [], edges: data.edges ?? data.links ?? [] });
+        setRawData({
+          nodes: data.nodes ?? [],
+          edges: data.edges ?? data.links ?? [],
+          values: data.values ?? {},
+          literacy: data.literacy ?? {},
+          uncertainty_sources: data.uncertainty_sources ?? {},
+          evidence_refs: data.evidence_refs ?? [],
+          contradiction_flags: data.contradiction_flags ?? [],
+          confidence: data.confidence ?? 0.5,
+          revision: data.revision ?? 1,
+        });
       } else { setFallback(); }
     } catch { setFallback(); }
     finally { setLoading(false); }
@@ -270,21 +374,31 @@ export default function P2_ModeloMental() {
 
   const setFallback = () => setRawData({
     nodes: [
-      { id: 'Productor', kind: 'actor', label: 'Productor', confidence: 0.9 },
-      { id: 'Teléfono', kind: 'concept', label: 'Teléfono', confidence: 0.85 },
-      { id: 'Desconfianza', kind: 'belief', label: 'Desconfianza', confidence: 0.92 },
-      { id: 'Impuestos', kind: 'fear', label: 'Impuestos', confidence: 0.75 },
-      { id: 'Robo Datos', kind: 'fear', label: 'Robo de datos', confidence: 0.8 },
-      { id: 'Cuaderno', kind: 'intention', label: 'Cuaderno', confidence: 0.88 },
+      { id: 'IA', kind: 'concept', label: 'IA', confidence: 0.9 },
+      { id: 'Datos', kind: 'concept', label: 'Datos', confidence: 0.85 },
+      { id: 'Confianza', kind: 'belief', label: 'Confianza', confidence: 0.78 },
+      { id: 'AsesorHumano', kind: 'actor', label: 'Asesor Humano', confidence: 0.95 },
+      { id: 'Audio', kind: 'intention', label: 'Audio', confidence: 0.88 },
     ],
     edges: [
-      { source: 'Productor', target: 'Teléfono', relation: 'tiene_acceso_a', weight: 0.7, inferred: false, support_count: 3, uncertainty: 0.1 },
-      { source: 'Teléfono', target: 'Desconfianza', relation: 'genera', weight: 0.85, inferred: false, support_count: 8, uncertainty: 0.05 },
-      { source: 'Desconfianza', target: 'Impuestos', relation: 'asociado_a', weight: 0.6, inferred: true, support_count: 2, uncertainty: 0.2 },
-      { source: 'Desconfianza', target: 'Robo Datos', relation: 'asociado_a', weight: 0.82, inferred: false, support_count: 5, uncertainty: 0.08 },
-      { source: 'Productor', target: 'Cuaderno', relation: 'prefiere', weight: 0.75, inferred: false, support_count: 4, uncertainty: 0.12 },
-      { source: 'Cuaderno', target: 'Desconfianza', relation: 'mitiga', weight: 0.55, inferred: true, support_count: 1, uncertainty: 0.3 },
+      { source: 'Datos', target: 'IA', relation: 'riesgo', weight: 0.8, inferred: false, support_count: 5, uncertainty: 0.1 },
+      { source: 'IA', target: 'Confianza', relation: 'si_explica', weight: 0.75, inferred: true, support_count: 3, uncertainty: 0.2 },
+      { source: 'Datos', target: 'Confianza', relation: 'sin_control', weight: 0.9, inferred: false, support_count: 8, uncertainty: 0.05 },
+      { source: 'AsesorHumano', target: 'Confianza', relation: 'media', weight: 0.85, inferred: false, support_count: 6, uncertainty: 0.08 },
+      { source: 'Audio', target: 'Confianza', relation: 'canal', weight: 0.7, inferred: true, support_count: 2, uncertainty: 0.25 },
     ],
+    values: { 'control_datos': 0.85, 'mediacion_confiable': 0.78 },
+    literacy: { 'base_conceptual': 0.32, 'uso_digital': 0.25 },
+    uncertainty_sources: { 'transcripcion': 0.1, 'inferencia_llm': 0.25, 'evidencia': 0.15 },
+    evidence_refs: [
+      { quote: 'Si una aplicación recomienda fertilizar, quiero saber con qué datos lo hizo.', kind: 'direct', confidence: 0.9 },
+      { quote: 'No quiero entregar datos del predio si luego no sé quién los usa.', kind: 'direct', confidence: 0.88 },
+      { quote: 'Prefiero explicación por audio y con alguien de confianza.', kind: 'direct', confidence: 0.92 },
+      { quote: 'La IA genera confianza solo si explica el porqué de sus recomendaciones.', kind: 'inferred', confidence: 0.75 },
+    ],
+    contradiction_flags: [],
+    confidence: 0.78,
+    revision: 1,
   });
 
   // Construir graphData filtrado
@@ -329,8 +443,10 @@ export default function P2_ModeloMental() {
   const allKinds = [...new Set(rawData.nodes.map(n => n.kind ?? n.group ?? 'concept'))];
   const hasInferred = rawData.edges.some(e => e.inferred);
 
+  const { values, literacy, uncertainty_sources, evidence_refs, contradiction_flags, confidence, revision } = rawData;
+
   return (
-    <div className="max-w-[1400px] mx-auto py-6 px-4 flex flex-col h-[calc(100vh-80px)] gap-6">
+    <div className="max-w-[1400px] mx-auto py-6 px-4 flex flex-col h-[calc(100vh-80px)] gap-4">
 
       {/* Header */}
       <div className="flex items-center gap-4 shrink-0 bg-surface/60 backdrop-blur-md p-4 rounded-3xl border border-outline-variant/30 shadow-sm">
@@ -370,10 +486,72 @@ export default function P2_ModeloMental() {
         )}
       </div>
 
-      {/* Layout grafo + panel */}
-      <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0">
+      {/* Layout: 3 columnas */}
+      <div className="flex-1 flex flex-col md:flex-row gap-4 min-h-0">
 
-        {/* Canvas grafo */}
+        {/* ── Sidebar izquierdo: Relato + Lectura del sistema ── */}
+        <div className={`shrink-0 transition-all duration-300 ${leftOpen ? 'w-full md:w-[300px]' : 'md:w-10'} flex flex-col`}>
+          {/* Toggle */}
+          <button
+            onClick={() => setLeftOpen(v => !v)}
+            className="hidden md:flex items-center justify-center self-end mb-2 w-8 h-8 rounded-full bg-surface-container border border-outline-variant/30 hover:bg-primary-container text-on-surface-variant hover:text-primary transition-colors"
+            title={leftOpen ? 'Cerrar panel' : 'Abrir panel'}
+          >
+            <span className="material-symbols-outlined text-sm">{leftOpen ? 'chevron_left' : 'chevron_right'}</span>
+          </button>
+
+          {leftOpen && (
+            <div className="flex-1 flex flex-col rounded-[28px] border border-outline-variant/40 bg-surface-container-lowest/90 backdrop-blur-md overflow-hidden shadow-md min-h-0">
+              {/* Tabs */}
+              <div className="flex border-b border-outline-variant/30">
+                {[['relato','article','Relato'],['tupla','functions','Mᵢ']].map(([tab, icon, label]) => (
+                  <button
+                    key={tab}
+                    onClick={() => setLeftTab(tab)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+                      leftTab === tab
+                        ? 'text-primary border-b-2 border-primary bg-primary-container/10'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{icon}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
+                {leftTab === 'relato' ? (
+                  <>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-secondary mb-3 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[14px]">format_quote</span>
+                      Fragmentos del Relato
+                    </p>
+                    <NarrativePanel evidenceRefs={evidence_refs} contradictions={contradiction_flags} />
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[14px]">functions</span>
+                      Lectura del Sistema
+                    </p>
+                    <TupleReadingPanel
+                      values={values}
+                      literacy={literacy}
+                      uncertaintySources={uncertainty_sources}
+                      confidence={confidence}
+                      revision={revision}
+                      nodes={rawData.nodes}
+                      edges={rawData.edges}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Canvas grafo ── */}
         <div
           ref={containerRef}
           className="flex-1 rounded-[32px] border border-outline-variant/40 bg-surface/80 backdrop-blur-md overflow-hidden relative cursor-grab active:cursor-grabbing shadow-md"

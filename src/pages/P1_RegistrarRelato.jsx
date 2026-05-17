@@ -12,7 +12,7 @@ export default function P1_RegistrarRelato() {
     pid: '',
     relato: '',
     consent_data: false,   // Permite guardar los datos
-    consent_ai: false      // Permite procesar con Ollama/Agentes
+    consent_ai: false      // Permite procesar con Agentes/LLM
   });
 
   // El botón solo se habilita si ambos consentimientos obligatorios están marcados y hay texto
@@ -208,7 +208,7 @@ const handleSubmit = async (e) => {
                   Procesamiento mediante Inteligencia Artificial Local
                 </p>
                 <p className="text-sm text-on-surface-variant">
-                  El productor comprende y acepta que este texto será procesado por el agente M_per (Ollama Core) para generar su modelo mental.
+                  El productor comprende y acepta que este texto será procesado por la inteligencia artificial para generar su modelo mental.
                 </p>
               </div>
             </label>

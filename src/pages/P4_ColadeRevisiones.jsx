@@ -145,7 +145,7 @@ export default function P4_ColadeRevisiones() {
                   Justificación de AEXPL
                   {!isStubMode && (
                     <span className="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full ml-2 border border-tertiary/20 font-bold">
-                      GENERADO POR LLM (OLLAMA)
+                      GENERADO POR LLM ({mode.toUpperCase()})
                     </span>
                   )}
                   {isStubMode && (
