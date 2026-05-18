@@ -41,11 +41,24 @@ const handleSubmit = async (e) => {
     const now = new Date();
     const nextYear = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
 
+    // Obtenemos o generamos un Session ID del facilitador
+    let currentSid = sessionStorage.getItem('facilitator_sid');
+    if (!currentSid) {
+      currentSid = crypto.randomUUID ? crypto.randomUUID() : `sid_${Date.now()}`;
+      sessionStorage.setItem('facilitator_sid', currentSid);
+    }
+
+    // Calculamos hash criptográfico real del contenido
+    const msgUint8 = new TextEncoder().encode(formData.relato);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const contentHashReal = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
     // Construimos el Payload EXACTO que pide el modelo Pydantic del Backend
     const payload = {
       event_id: eventId,
       event_type: "narrative.v1",
-      sid: "sesion_campo_01", // ID de sesión simulado (puedes adaptarlo luego)
+      sid: currentSid,
       pid: formData.pid,
       channel: "text",
       content: formData.relato, // Aquí va el texto real
@@ -71,7 +84,7 @@ const handleSubmit = async (e) => {
       version: 1,
       schema_version: "event-envelope/2.0",
       ts: now.toISOString(),
-      content_hash: "hash_pendiente", // Si requieres hash real en el front, podemos agregarlo después
+      content_hash: contentHashReal,
       metadata: {}
     };
 

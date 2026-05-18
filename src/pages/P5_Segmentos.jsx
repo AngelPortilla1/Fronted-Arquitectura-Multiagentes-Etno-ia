@@ -13,27 +13,6 @@ export default function P5_Segmentos() {
   }, []);
 
   const fetchSegments = async () => {
-    // Datos de respaldo (Mock BDI para agrupamiento comunitario)
-    const mockData = [
-      {
-        segment_id: "seg_rosal_01",
-        name: "Vereda El Rosal - Tradicionales",
-        population_size: 14,
-        trust_level: "Bajo",
-        predominant_belief: "La tecnología expone los datos de la finca al gobierno.",
-        macro_route: "Soberanía de Datos e Introducción a la IA",
-        status: "Requiere Intervención"
-      },
-      {
-        segment_id: "seg_lejania_02",
-        name: "Vereda La Lejanía - Jóvenes Relevo",
-        population_size: 8,
-        trust_level: "Medio-Alto",
-        predominant_belief: "La IA puede optimizar tiempos pero requiere internet (que no hay).",
-        macro_route: "IA Offline y Modelos Locales Predictivos",
-        status: "Ruta Activa"
-      }
-    ];
 
     try {
       const response = await fetch(API_ENDPOINTS.SEGMENTS);
@@ -47,9 +26,9 @@ export default function P5_Segmentos() {
         throw new Error('Backend encendido pero no retornó segmentos válidos.');
       }
     } catch (err) {
-      // Si el servidor está apagado o hay error de red (CORS), usamos los de prueba como fallback EXCLUSIVO
-      console.warn('Usando datos simulados. No se detectó el backend en /segments');
-      setSegments(mockData);
+      // Si el servidor está apagado o hay error de red (CORS), fallamos a estado vacío
+      console.warn('Error al obtener segmentos. No se detectó el backend en /segments');
+      setSegments([]);
     } finally {
       // Obligamos a quitar la pantalla de carga pase lo que pase
       setLoading(false);

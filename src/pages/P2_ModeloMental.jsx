@@ -150,7 +150,9 @@ function NodePanel({ node, edges, nodes, onClose }) {
                   </div>
                   <Meter value={e.weight ?? 0.5} color={ks.stroke} />
                   {e.support_count != null && (
-                    <p className="m-0 mt-3 text-[11px] text-on-surface-variant font-medium border-t border-outline-variant/20 pt-2">
+                    <p className={`m-0 mt-3 text-[11px] font-medium border-t border-outline-variant/20 pt-2 ${
+                      (e.uncertainty ?? 0) > 0.5 ? 'text-amber-600 font-bold' : (e.uncertainty ?? 0) < 0.1 ? 'text-green-600' : 'text-on-surface-variant'
+                    }`}>
                       {e.support_count} fragmentos de evidencia · Incertidumbre: {Math.round((e.uncertainty ?? 0) * 100)}%
                     </p>
                   )}
@@ -173,10 +175,25 @@ function NodePanel({ node, edges, nodes, onClose }) {
               const src = nodeById(e.source);
               const srcKs = kindStyle(src?.kind ?? src?.group);
               return (
-                <div key={i} className="flex items-center gap-3 bg-surface p-3 rounded-xl border border-outline-variant/20">
-                  <div className="w-2.5 h-2.5 rounded-full shrink-0 border-2" style={{ background: srcKs.fill, borderColor: srcKs.stroke }} />
-                  <span className="font-bold text-xs text-on-surface truncate flex-1">{src?.label ?? e.source}</span>
-                  <span className="font-mono font-bold text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded shrink-0">→ {e.relation ?? e.label}</span>
+                <div key={i} className="bg-surface p-4 rounded-2xl border border-outline-variant/30 shadow-sm transition-colors hover:border-primary/40">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-mono font-bold text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded uppercase tracking-wide border border-outline-variant/30">
+                      ← {e.relation ?? e.label}
+                    </span>
+                    {e.inferred && <Badge label="Inferencia LLM" className="text-[9px] px-2 bg-tertiary-fixed border-tertiary/20 text-on-tertiary-fixed" />}
+                  </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-3 h-3 rounded-full shrink-0 border-2" style={{ background: srcKs.fill, borderColor: srcKs.stroke }} />
+                    <span className="text-sm font-bold text-on-surface">{src?.label ?? e.source}</span>
+                  </div>
+                  <Meter value={e.weight ?? 0.5} color={srcKs.stroke} />
+                  {e.support_count != null && (
+                    <p className={`m-0 mt-3 text-[11px] font-medium border-t border-outline-variant/20 pt-2 ${
+                      (e.uncertainty ?? 0) > 0.5 ? 'text-amber-600 font-bold' : (e.uncertainty ?? 0) < 0.1 ? 'text-green-600' : 'text-on-surface-variant'
+                    }`}>
+                      {e.support_count} fragmentos de evidencia · Incertidumbre: {Math.round((e.uncertainty ?? 0) * 100)}%
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -188,7 +205,7 @@ function NodePanel({ node, edges, nodes, onClose }) {
 }
 
 // ─── Panel: Relato + Evidencias ─────────────────────────────────────────────
-function NarrativePanel({ evidenceRefs = [], contradictions = [] }) {
+function NarrativePanel({ evidenceRefs = [], contradictions = [], title = "Fragmentos del Relato" }) {
   if (evidenceRefs.length === 0)
     return (
       <div className="flex flex-col items-center justify-center h-full opacity-50 gap-2 text-center px-4 py-8">
@@ -197,26 +214,40 @@ function NarrativePanel({ evidenceRefs = [], contradictions = [] }) {
       </div>
     );
   return (
-    <div className="flex flex-col gap-3 overflow-y-auto max-h-64 pr-1">
-      {evidenceRefs.slice(0, 6).map((ref, i) => (
+    <div className="flex flex-col gap-3 overflow-y-auto max-h-[500px] pr-1">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-secondary mb-1 flex items-center gap-1.5">
+        <span className="material-symbols-outlined text-[14px]">format_quote</span>
+        {title} ({evidenceRefs.length})
+      </p>
+      {evidenceRefs.slice(0, 15).map((ref, i) => (
         <div key={i} className="p-3 rounded-xl bg-surface border border-outline-variant/30 text-xs leading-relaxed">
-          <p className="text-on-surface italic mb-1">"{ref.quote?.slice(0, 120)}{ref.quote?.length > 120 ? '…' : ''}"</p>
-          <div className="flex items-center gap-2 flex-wrap mt-1">
+          <p className="text-on-surface italic mb-2">"{ref.quote}"</p>
+          <div className="flex items-center gap-2 flex-wrap">
             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
               ref.kind === 'direct' ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-tertiary-fixed text-on-tertiary-fixed'
             }`}>{ref.kind === 'direct' ? 'Directa' : 'Inferida'}</span>
-            <span className="text-on-surface-variant">{Math.round((ref.confidence ?? 0.5) * 100)}% conf.</span>
+            <span className="text-on-surface-variant font-bold">{Math.round((ref.confidence ?? 0.5) * 100)}% conf.</span>
+            <span className={`font-bold ${
+              (ref.uncertainty ?? 0) > 0.5 ? 'text-amber-600' : (ref.uncertainty ?? 0) < 0.1 ? 'text-green-600' : 'text-on-surface-variant'
+            }`}>
+              {Math.round((ref.uncertainty ?? 0) * 100)}% incert.
+            </span>
+            {ref.metadata?.llm_provider && (
+              <span className="text-[9px] font-mono bg-surface-container px-1.5 py-0.5 rounded text-on-surface-variant">
+                LLM: {ref.metadata.llm_provider}
+              </span>
+            )}
           </div>
         </div>
       ))}
       {contradictions.length > 0 && (
-        <div className="p-3 rounded-xl bg-error-container/20 border border-error/20 text-xs">
+        <div className="p-3 rounded-xl bg-error-container/20 border border-error/20 text-xs mt-2">
           <p className="font-bold text-error flex items-center gap-1 mb-1">
             <span className="material-symbols-outlined text-[14px]">warning</span>
             {contradictions.length} contradicción(es) detectada(s)
           </p>
           {contradictions.map((c, i) => (
-            <p key={i} className="text-on-surface-variant">{c.reason?.slice(0, 80)}</p>
+            <p key={i} className="text-on-surface-variant">{c.reason}</p>
           ))}
         </div>
       )}
@@ -249,7 +280,7 @@ function TupleReadingPanel({ values = {}, literacy = {}, uncertaintySources = {}
       color: 'text-on-tertiary-container',
       bg: 'bg-tertiary-container/20 border-tertiary-container/40',
       content: Object.keys(literacy).length > 0
-        ? Object.entries(literacy).map(([k, v]) => `${k}: ${Math.round(v * 100)}%`).join(' · ')
+        ? Object.entries(literacy).map(([k, v]) => `${k}: ${(v * 100).toFixed(1)}%`).join(' · ')
         : 'Perfil de alfabetización base incipiente.',
     },
     {
@@ -329,7 +360,9 @@ export default function P2_ModeloMental() {
   const [rawData, setRawData] = useState({ nodes: [], edges: [], values: {}, literacy: {}, uncertainty_sources: {}, evidence_refs: [], contradiction_flags: [], confidence: 0.5, revision: 1 });
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedLink, setSelectedLink] = useState(null);
   const [activeKinds, setActiveKinds] = useState(new Set());
   const [showInferred, setShowInferred] = useState(true);
   const [leftOpen, setLeftOpen] = useState(true);
@@ -352,6 +385,7 @@ export default function P2_ModeloMental() {
 
   const fetchMentalModel = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(getMentalModelUrl(pid));
       if (res.ok) {
@@ -367,39 +401,10 @@ export default function P2_ModeloMental() {
           confidence: data.confidence ?? 0.5,
           revision: data.revision ?? 1,
         });
-      } else { setFallback(); }
-    } catch { setFallback(); }
+      } else { setError('Error: No se pudo obtener el modelo mental.'); }
+    } catch { setError('Error: No se pudo obtener el modelo mental.'); }
     finally { setLoading(false); }
   };
-
-  const setFallback = () => setRawData({
-    nodes: [
-      { id: 'IA', kind: 'concept', label: 'IA', confidence: 0.9 },
-      { id: 'Datos', kind: 'concept', label: 'Datos', confidence: 0.85 },
-      { id: 'Confianza', kind: 'belief', label: 'Confianza', confidence: 0.78 },
-      { id: 'AsesorHumano', kind: 'actor', label: 'Asesor Humano', confidence: 0.95 },
-      { id: 'Audio', kind: 'intention', label: 'Audio', confidence: 0.88 },
-    ],
-    edges: [
-      { source: 'Datos', target: 'IA', relation: 'riesgo', weight: 0.8, inferred: false, support_count: 5, uncertainty: 0.1 },
-      { source: 'IA', target: 'Confianza', relation: 'si_explica', weight: 0.75, inferred: true, support_count: 3, uncertainty: 0.2 },
-      { source: 'Datos', target: 'Confianza', relation: 'sin_control', weight: 0.9, inferred: false, support_count: 8, uncertainty: 0.05 },
-      { source: 'AsesorHumano', target: 'Confianza', relation: 'media', weight: 0.85, inferred: false, support_count: 6, uncertainty: 0.08 },
-      { source: 'Audio', target: 'Confianza', relation: 'canal', weight: 0.7, inferred: true, support_count: 2, uncertainty: 0.25 },
-    ],
-    values: { 'control_datos': 0.85, 'mediacion_confiable': 0.78 },
-    literacy: { 'base_conceptual': 0.32, 'uso_digital': 0.25 },
-    uncertainty_sources: { 'transcripcion': 0.1, 'inferencia_llm': 0.25, 'evidencia': 0.15 },
-    evidence_refs: [
-      { quote: 'Si una aplicación recomienda fertilizar, quiero saber con qué datos lo hizo.', kind: 'direct', confidence: 0.9 },
-      { quote: 'No quiero entregar datos del predio si luego no sé quién los usa.', kind: 'direct', confidence: 0.88 },
-      { quote: 'Prefiero explicación por audio y con alguien de confianza.', kind: 'direct', confidence: 0.92 },
-      { quote: 'La IA genera confianza solo si explica el porqué de sus recomendaciones.', kind: 'inferred', confidence: 0.75 },
-    ],
-    contradiction_flags: [],
-    confidence: 0.78,
-    revision: 1,
-  });
 
   // Construir graphData filtrado
   useEffect(() => {
@@ -430,6 +435,7 @@ export default function P2_ModeloMental() {
 
   const handleNodeClick = useCallback((node) => {
     setSelectedNode(node);
+    setSelectedLink(null);
     graphRef.current?.centerAt(node.x, node.y, 600);
     graphRef.current?.zoom(2.2, 600);
   }, []);
@@ -522,13 +528,16 @@ export default function P2_ModeloMental() {
 
               <div className="flex-1 overflow-y-auto p-4">
                 {leftTab === 'relato' ? (
-                  <>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-secondary mb-3 flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[14px]">format_quote</span>
-                      Fragmentos del Relato
-                    </p>
-                    <NarrativePanel evidenceRefs={evidence_refs} contradictions={contradiction_flags} />
-                  </>
+                  <div className="flex-1 overflow-y-auto">
+                    <NarrativePanel 
+                      evidenceRefs={selectedLink 
+                        ? evidence_refs.filter(ref => selectedLink.evidence_refs?.includes(ref.evidence_id))
+                        : evidence_refs
+                      } 
+                      title={selectedLink ? `Evidencia de Relación Seleccionada` : `Fragmentos Globales`}
+                      contradictions={contradiction_flags} 
+                    />
+                  </div>
                 ) : (
                   <>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-1.5">
@@ -560,6 +569,11 @@ export default function P2_ModeloMental() {
             <div className="absolute inset-0 flex items-center justify-center bg-surface/50 backdrop-blur-sm z-10">
               <span className="animate-spin material-symbols-outlined text-5xl text-primary">sync</span>
             </div>
+          ) : error ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface/50 backdrop-blur-sm z-10 gap-4">
+              <span className="material-symbols-outlined text-5xl text-error">error</span>
+              <p className="font-headline-md text-xl text-on-surface-variant">{error}</p>
+            </div>
           ) : (
             <ForceGraph2D
               ref={graphRef}
@@ -572,15 +586,24 @@ export default function P2_ModeloMental() {
               nodeVal={n => (n.__r ?? 14) * (n.__r ?? 14)}
               nodeCanvasObject={(node, ctx, scale) => drawNode(node, ctx, scale, selectedNode?.id)}
               nodeCanvasObjectMode={() => 'replace'}
-              linkColor={l => l.inferred ? '#a3a8a3' : '#4d6453'}
-              linkWidth={l => 1.5 + (l.weight ?? 0.5) * 3.5}
-              linkOpacity={l => l.inferred ? 0.5 : 0.8}
+              linkColor={l => l === selectedLink ? '#d97706' : l.inferred ? '#a3a8a3' : '#4d6453'}
+              linkWidth={l => (l === selectedLink ? 4 : 1.5) + (l.weight ?? 0.5) * 3.5}
+              linkOpacity={l => (l === selectedLink ? 0.9 : l.inferred ? 0.5 : 0.8)}
               linkDirectionalArrowLength={6}
               linkDirectionalArrowRelPos={1}
               linkLineDash={l => l.inferred ? [5, 4] : null}
               linkLabel={l => `${l.relation ?? l.label}${l.support_count ? ` (${l.support_count})` : ''}`}
               onNodeClick={handleNodeClick}
-              onBackgroundClick={() => setSelectedNode(null)}
+              onLinkClick={(link) => {
+                setSelectedLink(link);
+                setSelectedNode(null);
+                setLeftOpen(true);
+                setLeftTab('relato');
+              }}
+              onBackgroundClick={() => {
+                setSelectedNode(null);
+                setSelectedLink(null);
+              }}
               cooldownTicks={120}
             />
           )}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getRevokeUrl } from '../api/client';
+import { API_ENDPOINTS, getRevokeUrl } from '../api/client';
 
 export default function P7_Auditoria() {
   const navigate = useNavigate();

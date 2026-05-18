@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS, getReviewApproveUrl } from '../api/client';
 
 export default function P6_AprobacionCurricular() {
   const navigate = useNavigate();
@@ -12,49 +13,9 @@ export default function P6_AprobacionCurricular() {
   }, []);
 
   const fetchCurriculumReviews = async () => {
-    // Mock Data robusto para el Equipo Curricular
-    const mockData = [
-      {
-        review_id: "rev_curr_101",
-        pid: "segmento_el_rosal",
-        status: "pending",
-        risk_level: "Alto",
-        payload: {
-          route_type: "Alfabetización Base - Módulo Confianza",
-          explanation: "La comunidad presenta un nivel de desconfianza crítico respecto a la privacidad. M_curr sugiere priorizar la soberanía de datos antes de enseñar conceptos de IA generativa.",
-          steps: [
-            { module_id: "MOD-C2", title: "Tus datos son tu cosecha", type: "Teórico-Práctico" },
-            { module_id: "MOD-C1", title: "¿Qué es un modelo de IA?", type: "Análogo (Sin pantalla)" }
-          ],
-          quotes: [
-            "La tecnología expone los datos de la finca al gobierno.",
-            "Nos da miedo que nos roben la información de las siembras."
-          ]
-        }
-      },
-      {
-        review_id: "rev_curr_102",
-        pid: "campesino_la_lejania_02",
-        status: "pending",
-        risk_level: "Medio",
-        payload: {
-          route_type: "IA Offline Predictiva",
-          explanation: "El productor entiende el beneficio de la IA, pero su limitante es la conectividad. Se adapta la ruta para usar modelos pequeños (SLMs) en el dispositivo móvil.",
-          steps: [
-            { module_id: "MOD-A1", title: "Inteligencia sin Internet", type: "Taller Práctico" },
-            { module_id: "MOD-A3", title: "Asistentes de bolsillo (Ollama)", type: "Demostración" }
-          ],
-          quotes: [
-            "Allá arriba en la vereda la señal es muy mala.",
-            "Me preocupa que esas tecnologías necesiten internet todo el tiempo."
-          ]
-        }
-      }
-    ];
-
     try {
       // Tarea F3.2: Combinamos la consulta
-      const response = await fetch('http://127.0.0.1:8000/reviews?status=pending');
+      const response = await fetch(`${API_ENDPOINTS.REVIEWS}?status=pending`);
       if (response.ok) {
         const data = await response.json();
         // Filtramos localmente para quedarnos solo con las de tipo "curriculum" (o adaptarlo a tu estructura)
@@ -67,9 +28,9 @@ export default function P6_AprobacionCurricular() {
         throw new Error('Backend encendido pero no retornó datos válidos (ej. 404).');
       }
     } catch (err) {
-      console.warn("Backend no disponible o error de red. Cargando entorno de prueba curricular como FALLBACK EXCLUSIVO.");
-      setCurricula(mockData);
-      setSelectedItem(mockData[0]);
+      console.warn("Backend no disponible o error de red.");
+      setCurricula([]);
+      setSelectedItem(null);
     } finally {
       setLoading(false);
     }
@@ -78,7 +39,7 @@ export default function P6_AprobacionCurricular() {
   const handleApprove = async (id) => {
     try {
       // Simulamos la aprobación
-      await fetch(`http://127.0.0.1:8000/reviews/${id}/approve`, { method: 'POST' });
+      await fetch(getReviewApproveUrl(id), { method: 'POST' });
       
       const updatedList = curricula.filter(item => item.review_id !== id);
       setCurricula(updatedList);
