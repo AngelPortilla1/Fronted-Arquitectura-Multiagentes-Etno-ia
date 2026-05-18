@@ -129,7 +129,11 @@ export default function P5_Segmentos() {
               {/* Acción / Ruta Sugerida */}
               <div className="pt-2 border-t border-outline-variant/30">
                 <p className="text-xs text-on-surface-variant uppercase font-bold mb-2">Centroid PID (Representante)</p>
-                <button className="w-full text-left bg-secondary-container/20 hover:bg-secondary-container/40 border border-secondary-container text-on-secondary-container p-4 rounded-2xl transition-colors flex justify-between items-center group-hover:border-secondary">
+                <button 
+                  onClick={() => seg.centroid_pid && navigate(`/modelo-mental/${seg.centroid_pid}`)}
+                  disabled={!seg.centroid_pid}
+                  className="w-full text-left bg-secondary-container/20 hover:bg-secondary-container/40 border border-secondary-container text-on-secondary-container p-4 rounded-2xl transition-colors flex justify-between items-center group-hover:border-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <span className="font-label-md text-sm truncate">{seg.centroid_pid || 'No asignado'}</span>
                   <span className="material-symbols-outlined">person_search</span>
                 </button>

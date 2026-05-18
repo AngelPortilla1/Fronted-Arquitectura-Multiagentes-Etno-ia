@@ -163,9 +163,14 @@ const handleSubmit = async (e) => {
           <label htmlFor="relato" className="block font-label-md text-on-surface mb-2">
             Relato del Productor <span className="text-error">*</span>
           </label>
-          <p className="text-sm text-on-surface-variant mb-3">
-            Transcribe textualmente las necesidades, temores o dudas sobre la tecnología y los datos.
-          </p>
+          <div className="flex justify-between items-end mb-3">
+            <p className="text-sm text-on-surface-variant">
+              Transcribe textualmente las necesidades, temores o dudas sobre la tecnología y los datos.
+            </p>
+            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${formData.relato.length > 50 ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-highest text-on-surface-variant'}`}>
+              {formData.relato.length} caracteres
+            </span>
+          </div>
           <textarea
             id="relato"
             name="relato"
@@ -247,7 +252,7 @@ const handleSubmit = async (e) => {
             ) : (
               <>
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
-                Enviar al Agente (POST)
+                Registrar y Analizar
               </>
             )}
           </button>

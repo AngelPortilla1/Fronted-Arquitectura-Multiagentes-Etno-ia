@@ -9,10 +9,13 @@ import P5_Segmentos from './pages/P5_Segmentos';
 import P6_AprobacionCurricular from './pages/P6_AprobacionCurricular';
 import P7_Auditoria from './pages/P7_Auditoria';
 import MentalModelsAnalysis from './pages/MentalModelsAnalysis';
+import P404 from './pages/P404';
+import ScrollToTop from './components/ScrollToTop';
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<P0_Home />} />
@@ -26,6 +29,9 @@ export default function App() {
           
           <Route path="/auditoria/:pid" element={<P7_Auditoria />} />
           <Route path="/analisis-modelos" element={<MentalModelsAnalysis />} />
+          
+          {/* F4: Pantalla 404 Catch-all */}
+          <Route path="*" element={<P404 />} />
         </Route>
       </Routes>
     </BrowserRouter>

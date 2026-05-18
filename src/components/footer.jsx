@@ -23,7 +23,7 @@ const Footer = () => (
           {/* Navegación Secundaria */}
           <nav className="flex gap-8">
             <Link
-              to="/documentacion"
+              to="/analisis-modelos"
               className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group"
             >
               Documentación
@@ -38,6 +38,7 @@ const Footer = () => (
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
             </Link>
 
+            {/* Oculto temporalmente hasta que la página XAI sea implementada
             <Link
               to="/xai"
               className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group"
@@ -45,6 +46,7 @@ const Footer = () => (
               XAI
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
             </Link>
+            */}
           </nav>
 
           {/* Indicador de "Sistema Operativo" (Coherencia con Header) */}
