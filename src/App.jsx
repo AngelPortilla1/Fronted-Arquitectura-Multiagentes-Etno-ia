@@ -11,12 +11,14 @@ import P7_Auditoria from './pages/P7_Auditoria';
 import MentalModelsAnalysis from './pages/MentalModelsAnalysis';
 import P404 from './pages/P404';
 import ScrollToTop from './components/ScrollToTop';
+import { ToastProvider } from './components/ToastContext';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <Routes>
+    <ToastProvider>
+      <BrowserRouter>
+        <ScrollToTop />
+        <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<P0_Home />} />
           <Route path="/registrar-relato" element={<P1_RegistrarRelato />} />
@@ -30,10 +32,11 @@ export default function App() {
           <Route path="/auditoria/:pid" element={<P7_Auditoria />} />
           <Route path="/analisis-modelos" element={<MentalModelsAnalysis />} />
           
-          {/* F4: Pantalla 404 Catch-all */}
-          <Route path="*" element={<P404 />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+            {/* F4: Pantalla 404 Catch-all */}
+            <Route path="*" element={<P404 />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }

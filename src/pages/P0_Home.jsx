@@ -24,54 +24,48 @@ export default function P0_Home() {
         </p>
       </div>
 
-      {/* Quick Lookup Panel (NUEVO) */}
-      <div className="w-full max-w-4xl bg-surface/80 backdrop-blur-lg border border-white/40 shadow-xl rounded-[40px] p-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="flex-1 w-full">
-            <label className="block text-xs font-bold text-primary uppercase tracking-widest mb-3 ml-2">Consultar Productor Existente</label>
-            <div className="relative group">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">person_search</span>
-              <input 
-                type="text" 
-                placeholder="Ingresa el PID (ej: p1, don_aurelio...)" 
-                value={pidSearch}
-                onChange={(e) => setPidSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch('modelo-mental')}
-                className="w-full bg-surface-container-highest border border-outline-variant rounded-2xl pl-12 pr-4 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
-            </div>
+      {/* Quick Lookup Panel (Optimizada) */}
+      <div className="w-full max-w-[1000px] bg-surface/80 backdrop-blur-lg border border-white/40 shadow-sm rounded-3xl p-6 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="flex-1 w-full relative group">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">person_search</span>
+            <input 
+              type="text" 
+              placeholder="Ingresa el PID (ID del Productor, ej: p1, don_aurelio)" 
+              value={pidSearch}
+              onChange={(e) => setPidSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch('modelo-mental')}
+              className="w-full bg-surface-container-highest border border-outline-variant rounded-2xl pl-12 pr-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
           </div>
           
-          <div className="flex gap-3 w-full md:w-auto mt-6 md:mt-0 flex-wrap md:flex-nowrap">
+          <div className="flex gap-2 w-full md:w-auto">
             <button 
               onClick={() => handleSearch('modelo-mental')}
               disabled={!pidSearch.trim()}
-              className="flex-1 md:flex-none bg-primary text-on-primary px-6 py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 md:flex-none bg-primary text-on-primary px-5 py-3 rounded-2xl text-sm font-bold hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined">account_tree</span>
+              <span className="material-symbols-outlined text-[18px]">account_tree</span>
               Modelo
             </button>
             <button 
               onClick={() => handleSearch('ruta-pedagogica')}
               disabled={!pidSearch.trim()}
-              className="flex-1 md:flex-none bg-secondary text-on-secondary px-6 py-4 rounded-2xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 md:flex-none bg-secondary text-on-secondary px-5 py-3 rounded-2xl text-sm font-bold hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined">route</span>
+              <span className="material-symbols-outlined text-[18px]">route</span>
               Ruta
             </button>
             <button 
               onClick={() => handleSearch('auditoria')}
               disabled={!pidSearch.trim()}
-              className="flex-1 md:flex-none bg-surface-container-highest text-on-surface px-6 py-4 rounded-2xl font-bold border border-outline-variant hover:bg-surface-container-high transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 md:flex-none bg-surface-container-highest text-on-surface px-5 py-3 rounded-2xl text-sm font-bold border border-outline-variant hover:bg-surface-container-high transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined">policy</span>
+              <span className="material-symbols-outlined text-[18px]">policy</span>
               Auditoría
             </button>
           </div>
         </div>
-        <p className="text-[10px] text-on-surface-variant/60 mt-4 text-center md:text-left ml-2 uppercase tracking-tighter italic">
-          * Para probar con datos de ejemplo del sistema, puedes usar el ID: <span className="font-bold text-primary">p1</span>
-        </p>
       </div>
 
       {/* Role Selection Cards */}

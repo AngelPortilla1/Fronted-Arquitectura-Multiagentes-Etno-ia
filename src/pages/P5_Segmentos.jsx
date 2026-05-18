@@ -96,15 +96,57 @@ export default function P5_Segmentos() {
             {/* Cuerpo de la Tarjeta */}
             <div className="p-6 space-y-6">
               
-              {/* Resumen del Segmento */}
+              {/* Resumen del Segmento Humanizado */}
               <div>
-                <h3 className="text-sm font-bold text-on-surface-variant uppercase flex items-center gap-2 mb-2">
+                <h3 className="text-sm font-bold text-on-surface-variant uppercase flex items-center gap-2 mb-3">
                   <span className="material-symbols-outlined text-[18px]">psychology</span>
-                  Análisis del Segmento
+                  Perfil Analítico BDI
                 </h3>
-                <p className="font-body-md text-on-surface bg-error-container/10 p-4 rounded-2xl border border-error/10 italic leading-relaxed">
-                  "{seg.summary || 'Sin resumen disponible.'}"
-                </p>
+                <div className="bg-surface-container-highest p-4 rounded-2xl border border-outline-variant/30">
+                  {(() => {
+                    const text = seg.summary || '';
+                    const audioMatch = text.match(/Audio=([\d.]+)/i);
+                    const dataMatch = text.match(/sensibilidad de datos=([\d.]+)/i);
+                    const recMatch = text.match(/interés en recomendaciones=([\d.]+)/i);
+                    const membersMatch = text.match(/Miembros:\s*([^.]+)/i);
+
+                    if (audioMatch || dataMatch || recMatch) {
+                      return (
+                        <div className="flex flex-col gap-3">
+                          {membersMatch && (
+                            <p className="text-sm text-on-surface mb-2">
+                              <span className="font-bold text-on-surface-variant">Miembros:</span> {membersMatch[1]}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {audioMatch && (
+                              <span className="px-3 py-1.5 bg-tertiary-container/30 text-on-tertiary-container border border-tertiary-container rounded-full text-xs font-bold flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">mic</span>
+                                Perfil Audio: {audioMatch[1]}
+                              </span>
+                            )}
+                            {dataMatch && (
+                              <span className="px-3 py-1.5 bg-secondary-container/30 text-on-secondary-container border border-secondary-container rounded-full text-xs font-bold flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">shield</span>
+                                Sensibilidad Datos: {dataMatch[1]}
+                              </span>
+                            )}
+                            {recMatch && (
+                              <span className="px-3 py-1.5 bg-primary-container/30 text-on-primary-container border border-primary-container rounded-full text-xs font-bold flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">lightbulb</span>
+                                Apertura a Recomendaciones: {recMatch[1]}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] uppercase tracking-widest text-on-surface-variant/70 italic mt-2 border-t border-outline-variant/20 pt-2">
+                            * Segmento hipotético inferido, revisable y no identitario.
+                          </p>
+                        </div>
+                      );
+                    }
+                    return <p className="font-body-md text-on-surface italic leading-relaxed">{text || 'Sin resumen disponible.'}</p>;
+                  })()}
+                </div>
               </div>
 
               {/* Métricas (Cobertura / Confianza) */}

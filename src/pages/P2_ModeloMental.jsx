@@ -565,6 +565,11 @@ export default function P2_ModeloMental() {
           ref={containerRef}
           className="flex-1 rounded-[32px] border border-outline-variant/40 bg-surface/80 backdrop-blur-md overflow-hidden relative cursor-grab active:cursor-grabbing shadow-md"
         >
+          {/* Instrucciones flotantes (Onboarding) */}
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 px-4 py-2 rounded-full text-[11px] font-bold text-on-surface-variant flex items-center gap-2 z-10 pointer-events-none shadow-sm animate-in fade-in slide-in-from-top-4 duration-1000">
+            <span className="material-symbols-outlined text-[16px] animate-pulse">touch_app</span>
+            Arrastra el lienzo o haz clic en los nodos para explorar
+          </div>
           {loading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-surface/50 backdrop-blur-sm z-10">
               <span className="animate-spin material-symbols-outlined text-5xl text-primary">sync</span>

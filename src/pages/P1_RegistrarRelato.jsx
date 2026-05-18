@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS } from '../api/client';
+import { useToast } from '../components/ToastContext';
 
 export default function P1_RegistrarRelato() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -102,7 +104,7 @@ const handleSubmit = async (e) => {
         throw new Error(`Error ${response.status}: El backend rechazó el formato. Revisa la consola.`);
       }
       
-      alert('¡Relato registrado y enviado a los agentes BDI exitosamente!');
+      showToast('¡Relato registrado y enviado a los agentes BDI exitosamente!', 'success');
       
       // Navegamos automáticamente al modelo mental generado para este productor
       navigate(`/modelo-mental/${formData.pid}`);

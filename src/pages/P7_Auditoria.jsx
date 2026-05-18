@@ -8,6 +8,7 @@ export default function P7_Auditoria() {
   const [loading, setLoading] = useState(true);
   const [revokingId, setRevokingId] = useState(null);
   const [revokeScope, setRevokeScope] = useState('');  // '' = revocación total
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   
   // Usamos uno de los PIDs reales de tu base de datos
   const { pid: targetPid } = useParams(); // Obtenemos el PID a auditar desde la URL 
@@ -42,16 +43,11 @@ export default function P7_Auditoria() {
   };
 
   const handleRevoke = async () => {
+    setShowConfirmModal(false);
+    
     const scopeLabel = revokeScope
       ? `solo el alcance "${revokeScope}"`
       : 'TODOS los datos (relato, modelo mental BDI y ruta curricular)';
-
-    const confirmacion = window.confirm(
-      `⚠️ ATENCIÓN: Esta acción es irreversible.\n\n` +
-      `¿Confirma que el productor "${targetPid}" ha solicitado revocar ${scopeLabel}?`
-    );
-
-    if (!confirmacion) return;
 
     setRevokingId(targetPid);
     try {
@@ -140,48 +136,8 @@ export default function P7_Auditoria() {
         </div>
       </header>
 
-      {/* Panel de Revocación (Zona Peligrosa) */}
-      <div className="mb-8 bg-error-container/10 border border-error/30 p-6 rounded-3xl flex flex-col gap-5 shrink-0">
-        <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-error text-3xl mt-0.5">warning</span>
-          <div>
-            <h3 className="font-headline-md text-error mb-1">Derecho al Olvido (Revocación de Consentimiento)</h3>
-            <p className="text-sm text-on-surface-variant font-body-md">
-              Si <strong>{targetPid.replace(/_/g, ' ')}</strong> retira su consentimiento, seleccione el alcance y confirme la purga de datos.
-            </p>
-          </div>
-        </div>
-
-        {/* Selector de alcance */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <select
-            value={revokeScope}
-            onChange={(e) => setRevokeScope(e.target.value)}
-            disabled={revokingId === targetPid}
-            className="flex-1 bg-surface border border-error/40 text-on-surface rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-error transition-all"
-          >
-            <option value="">⚠️ Revocación total (todos los datos)</option>
-            <option value="raw_capture">Solo almacenamiento (raw_capture)</option>
-            <option value="semantic_processing">Solo procesamiento IA (semantic_processing)</option>
-            <option value="graph_derivative">Solo modelo mental BDI (graph_derivative)</option>
-          </select>
-
-          <button
-            onClick={handleRevoke}
-            disabled={revokingId === targetPid}
-            className="bg-error hover:bg-[#93000a] text-on-error px-6 py-3 rounded-xl font-label-md transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm disabled:opacity-60"
-          >
-            {revokingId === targetPid ? (
-              <><span className="animate-spin material-symbols-outlined">sync</span> Purgando...</>
-            ) : (
-              <><span className="material-symbols-outlined">delete_forever</span> Revocar Consentimiento</>
-            )}
-          </button>
-        </div>
-      </div>
-
       {/* Cadena de Auditoría (Línea de tiempo técnica real) */}
-      <div className="flex-1 bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden flex flex-col min-h-0">
+      <div className="flex-1 bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden flex flex-col min-h-0 mb-6">
         <div className="bg-surface-container-highest p-4 border-b border-outline-variant/30 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-on-surface-variant">history</span>
@@ -243,6 +199,81 @@ export default function P7_Auditoria() {
               </div>
             ))
           )}
+        </div>
+      </div>
+
+      {/* Panel de Revocación (Zona Peligrosa al Final) */}
+      <div className="bg-error-container/10 border border-error/30 p-6 rounded-3xl flex flex-col gap-5 shrink-0">
+        <div className="flex items-start gap-3">
+          <span className="material-symbols-outlined text-error text-3xl mt-0.5">warning</span>
+          <div>
+            <h3 className="font-headline-md text-error mb-1">Derecho al Olvido (Revocación de Consentimiento)</h3>
+            <p className="text-sm text-on-surface-variant font-body-md">
+              Si <strong>{targetPid.replace(/_/g, ' ')}</strong> retira su consentimiento, seleccione el alcance y confirme la purga de datos.
+            </p>
+          </div>
+        </div>
+
+        {/* Selector de alcance */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <select
+            value={revokeScope}
+            onChange={(e) => setRevokeScope(e.target.value)}
+            disabled={revokingId === targetPid}
+            className="flex-1 bg-surface border border-error/40 text-on-surface rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-error transition-all"
+          >
+            <option value="">⚠️ Revocación total (todos los datos)</option>
+            <option value="raw_capture">Solo almacenamiento (raw_capture)</option>
+            <option value="semantic_processing">Solo procesamiento IA (semantic_processing)</option>
+            <option value="graph_derivative">Solo modelo mental BDI (graph_derivative)</option>
+          </select>
+
+          <button
+            onClick={() => setShowConfirmModal(true)}
+            disabled={revokingId === targetPid}
+            className="bg-error hover:bg-[#93000a] text-on-error px-6 py-3 rounded-xl font-label-md transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm disabled:opacity-60"
+          >
+            {revokingId === targetPid ? (
+              <><span className="animate-spin material-symbols-outlined">sync</span> Purgando...</>
+            ) : (
+              <><span className="material-symbols-outlined">delete_forever</span> Revocar Consentimiento</>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Modal de Confirmación */}
+      <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-300 ${showConfirmModal ? 'visible opacity-100' : 'invisible opacity-0'}`}>
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowConfirmModal(false)}></div>
+        
+        <div className={`relative bg-surface border border-error/30 rounded-[32px] p-8 max-w-md w-full shadow-2xl transition-transform duration-300 ${showConfirmModal ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
+          <div className="w-16 h-16 rounded-full bg-error-container text-on-error-container flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <span className="material-symbols-outlined text-4xl">warning</span>
+          </div>
+          
+          <h2 className="text-center font-display-lg text-2xl font-bold text-on-surface mb-4">
+            ¿Confirmar Purga de Datos?
+          </h2>
+          
+          <p className="text-center font-body-md text-on-surface-variant mb-8 leading-relaxed">
+            Esta acción es <strong className="text-error">irreversible</strong>. ¿Estás seguro de que el productor <strong>{targetPid}</strong> ha solicitado revocar {revokeScope ? `solo el alcance "${revokeScope}"` : 'todos sus datos'}?
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button 
+              onClick={() => setShowConfirmModal(false)}
+              className="flex-1 px-6 py-3 rounded-2xl font-bold text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors"
+            >
+              Cancelar
+            </button>
+            <button 
+              onClick={handleRevoke}
+              className="flex-1 px-6 py-3 rounded-2xl font-bold text-on-error bg-error hover:bg-[#93000a] shadow-sm transition-colors flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[20px]">delete_forever</span>
+              Purga Definitiva
+            </button>
+          </div>
         </div>
       </div>
     </div>

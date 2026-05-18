@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS, getReviewApproveUrl } from '../api/client';
 import { useApiStatus } from '../hooks/useApiStatus';
+import { useToast } from '../components/ToastContext';
 
 export default function P4_ColadeRevisiones() {
   const navigate = useNavigate();
   const { mode } = useApiStatus();
+  const { showToast } = useToast();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,7 +28,14 @@ export default function P4_ColadeRevisiones() {
       }
       
       const data = await response.json();
-      setReviews(Array.isArray(data) ? data : [data]);
+      const allReviews = Array.isArray(data) ? data : [data];
+      
+      // Excluir revisiones curriculares (que pertenecen a P6)
+      const bdiReviews = allReviews.filter(
+        item => item.payload?.type !== 'curriculum'
+      );
+      
+      setReviews(bdiReviews);
     } catch (err) {
       setError('Error al cargar los perfiles pendientes. Verifica que tu backend en Python (puerto 8000) esté encendido.');
       console.error(err);
@@ -42,14 +51,20 @@ export default function P4_ColadeRevisiones() {
       });
 
       if (response.ok) {
+        showToast('Ruta de aprendizaje aprobada correctamente.', 'success');
         setReviews(currentReviews => currentReviews.filter(r => r.review_id !== reviewId));
       } else {
-        alert('Hubo un problema al aprobar la ruta en el servidor.');
+        showToast('Hubo un problema al aprobar la ruta en el servidor.', 'error');
       }
     } catch (err) {
-      alert('Error de red. Revisa tu conexión con el backend.');
+      showToast('Error de red. Revisa tu conexión con el backend.', 'error');
       console.error(err);
     }
+  };
+
+  const handleReject = (reviewId) => {
+    showToast('Revisión rechazada. Se ha notificado al Agente BDI para reevaluación.', 'info');
+    setReviews(currentReviews => currentReviews.filter(r => r.review_id !== reviewId));
   };
 
   // 1. Pantalla de carga
@@ -192,8 +207,16 @@ export default function P4_ColadeRevisiones() {
                 </ul>
               </div>
 
-              {/* Botón de Acción (Touch-Friendly) */}
-              <div className="flex justify-end pt-2">
+              {/* Botones de Acción (Touch-Friendly) */}
+              <div className="flex flex-col md:flex-row justify-end gap-3 pt-2">
+                <button
+                  onClick={() => handleReject(review.review_id)}
+                  className="w-full md:w-auto bg-surface-container hover:bg-error-container hover:text-error text-on-surface px-8 py-4 rounded-2xl font-label-md text-lg transition-all duration-300 flex items-center justify-center gap-3"
+                  aria-label="Rechazar esta ruta de aprendizaje"
+                >
+                  <span className="material-symbols-outlined">cancel</span>
+                  Rechazar
+                </button>
                 <button
                   onClick={() => handleApprove(review.review_id)}
                   className="w-full md:w-auto bg-primary text-on-primary px-8 py-4 rounded-2xl font-label-md text-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-3"

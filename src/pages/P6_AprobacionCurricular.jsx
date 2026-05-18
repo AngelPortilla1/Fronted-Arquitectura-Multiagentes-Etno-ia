@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS, getReviewApproveUrl } from '../api/client';
+import { useToast } from '../components/ToastContext';
 
 export default function P6_AprobacionCurricular() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [curricula, setCurricula] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -45,10 +47,10 @@ export default function P6_AprobacionCurricular() {
       setCurricula(updatedList);
       setSelectedItem(updatedList.length > 0 ? updatedList[0] : null);
       
-      alert('Ruta Curricular Aprobada. Se ha notificado al Agente M_curr.');
+      showToast('Ruta Curricular Aprobada. Se ha notificado al Agente M_curr.', 'success');
     } catch (err) {
       console.error(err);
-      alert('Error al comunicar con la base de datos.');
+      showToast('Error al comunicar con la base de datos.', 'error');
     }
   };
 
@@ -207,7 +209,12 @@ export default function P6_AprobacionCurricular() {
               {/* Footer de Acción */}
               <div className="pt-6 border-t border-outline-variant/30 flex justify-end gap-4 mt-auto">
                 <button 
-                  onClick={() => setSelectedItem(null)}
+                  onClick={() => {
+                    showToast('Revisión diferida. Se mantendrá en el log para auditoría.', 'info');
+                    const updatedList = curricula.filter(item => item.review_id !== selectedItem.review_id);
+                    setCurricula(updatedList);
+                    setSelectedItem(updatedList.length > 0 ? updatedList[0] : null);
+                  }}
                   className="px-6 py-3 rounded-xl font-label-md text-on-surface-variant hover:bg-surface-container transition-colors"
                 >
                   Diferir

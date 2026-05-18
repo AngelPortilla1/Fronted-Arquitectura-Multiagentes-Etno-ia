@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getRouteUrl } from '../api/client';
 import { useApiStatus } from '../hooks/useApiStatus';
+import { useToast } from '../components/ToastContext';
 
 export default function P3_RutaPedagogica() {
   const navigate = useNavigate();
   const { mode } = useApiStatus();
+  const { showToast } = useToast();
   const [route, setRoute] = useState(null);
   const [loading, setLoading] = useState(true);
   const { pid } = useParams(); // PID dinámico desde la URL
@@ -157,11 +159,14 @@ export default function P3_RutaPedagogica() {
       {/* Botón de Acción Final */}
       <div className="mt-16 text-center">
         <button 
-          onClick={() => navigate('/revisiones')}
+          onClick={() => {
+            showToast('Ruta enviada a la cola de revisiones del Agente BDI.', 'success');
+            navigate('/revisiones');
+          }}
           className="bg-primary text-on-primary px-10 py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-3 mx-auto"
         >
           <span className="material-symbols-outlined">playlist_add_check</span>
-          Enviar a Cola de Aprobación
+          Verificar en Cola de Revisiones
         </button>
       </div>
     </div>

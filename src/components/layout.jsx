@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { API_ENDPOINTS } from '../api/client';
 import { useApiStatus } from '../hooks/useApiStatus';
 import { useAgentSwarmStatus } from '../hooks/useAgentSwarmStatus';
 import { AgentStatusDropdown } from './agents/AgentStatusDropdown';
+import { useToast } from './ToastContext';
 import Footer from './footer';
 import LogoEtnoia from '../assets/LogoEtnoia.png';
 
@@ -11,8 +12,10 @@ export default function Layout() {
   // Uso del sensor real para el principio Offline-first
   const { isOnline, loading, mode, modelName } = useApiStatus();
   const { agents, isLoading } = useAgentSwarmStatus();
+  const { showToast } = useToast();
   const [isColdStarting, setIsColdStarting] = useState(false);
   const [useStub, setUseStub] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleColdStart = async () => {
     setIsColdStarting(true);
@@ -22,13 +25,13 @@ export default function Layout() {
         method: 'POST'
       });
       if (response.ok) {
-        alert('✅ Sistema Multiagente inicializado exitosamente en el Backend.');
-        window.location.reload(); // Recarga para que todos los hooks hagan fetch de los nuevos datos
+        showToast('Sistema Multiagente inicializado exitosamente.', 'success');
+        setTimeout(() => window.location.reload(), 1500);
       } else {
-        alert('⚠️ Error al intentar inicializar el Backend.');
+        showToast('Error al intentar inicializar el Backend.', 'error');
       }
     } catch (err) {
-      alert('❌ No se pudo conectar con el Backend (127.0.0.1:8000). Asegúrate de que FastAPI esté encendido.');
+      showToast('No se pudo conectar con el Backend (127.0.0.1:8000).', 'error');
       console.error(err);
     } finally {
       setIsColdStarting(false);
@@ -51,8 +54,14 @@ export default function Layout() {
       <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/20 shadow-sm transition-all duration-500 hover:backdrop-blur-2xl">
         <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
           
-          {/* Brand - Lado Izquierdo */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Brand & Menu - Lado Izquierdo */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <button 
+              onClick={() => setMenuOpen(true)}
+              className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-primary-container hover:text-primary transition-colors border border-outline-variant/30"
+            >
+              <span className="material-symbols-outlined">menu</span>
+            </button>
             <Link to="/" className="flex items-center gap-3 font-display-lg text-headline-md font-bold text-primary">
               <img src={LogoEtnoia} alt="Logo ETNO-IA Rural" className="h-10 w-auto object-contain" />
               <span className="hidden sm:block">ETNO-IA Rural 2.0</span>
@@ -85,27 +94,29 @@ export default function Layout() {
 
           {/* Actions - Lado Derecho */}
           <div className="flex items-center justify-end gap-3 flex-shrink-0">
+            
             {/* Toggle Modo Rápido */}
-            <div className="hidden xl:flex items-center gap-2 mr-1">
-              <label htmlFor="stub-toggle" className="text-[10px] font-label-md text-on-surface-variant cursor-pointer text-right leading-tight">
-                Modo Rápido<br/>(Stubs)
+            <div className="hidden md:flex items-center gap-2 bg-surface-container-highest/50 px-3 py-1.5 rounded-full border border-outline-variant/30 transition-colors hover:bg-surface-container-highest">
+              <span className="material-symbols-outlined text-[16px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                {useStub ? 'bolt' : 'psychology'}
+              </span>
+              <label htmlFor="stub-toggle" className="text-xs font-bold text-on-surface cursor-pointer select-none whitespace-nowrap">
+                {useStub ? 'Stubs' : 'LLM Real'}
               </label>
-              <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+              <div className="relative inline-block w-8 align-middle select-none ml-1 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  name="toggle" 
                   id="stub-toggle" 
                   checked={useStub}
                   onChange={(e) => setUseStub(e.target.checked)}
                   disabled={isColdStarting}
-                  className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-surface appearance-none cursor-pointer transition-transform duration-300 ease-in-out"
-                  style={{ transform: useStub ? 'translateX(100%)' : 'translateX(0)', borderColor: useStub ? '#c8f17a' : '#c3c8c1' }}
+                  className="absolute block w-4 h-4 rounded-full bg-white appearance-none cursor-pointer transition-all duration-300 z-10 top-[2px] shadow-sm"
+                  style={{ left: useStub ? '14px' : '2px' }}
                 />
-                <label 
-                  htmlFor="stub-toggle" 
-                  className="toggle-label block overflow-hidden h-5 rounded-full bg-surface-container-highest cursor-pointer transition-colors duration-300 ease-in-out"
-                  style={{ backgroundColor: useStub ? '#4d6453' : '#c3c8c1' }}
-                ></label>
+                <div 
+                  className="block h-5 rounded-full transition-colors duration-300 w-full"
+                  style={{ backgroundColor: useStub ? '#4d6453' : '#ba1a1a' }}
+                ></div>
               </div>
             </div>
 
@@ -113,40 +124,119 @@ export default function Layout() {
             <button 
               onClick={handleColdStart}
               disabled={isColdStarting}
-              title="Inicializar Sistema Multiagente (Cold Start)"
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 flex-shrink-0 ${
+              title="Inicializar Sistema Multiagente"
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 border ${
                 isColdStarting 
-                  ? 'bg-primary-container text-on-primary-container border-primary/30 cursor-not-allowed opacity-80 min-w-[200px] justify-center' 
-                  : 'bg-surface hover:bg-primary/10 text-primary border-primary/30 hover:shadow-sm'
+                  ? 'bg-surface-container text-on-surface-variant border-transparent cursor-wait' 
+                  : 'bg-primary hover:bg-[#3b4d3f] text-on-primary border-primary hover:shadow-md'
               }`}
             >
               {isColdStarting ? (
                 <>
-                  <span className="animate-spin material-symbols-outlined text-[18px] shrink-0">sync</span>
-                  <span className="text-xs font-label-md whitespace-nowrap">
-                    {useStub ? "Cargando entorno simulado..." : "Iniciando IA (Puede tardar)..."}
-                  </span>
+                  <span className="animate-spin material-symbols-outlined text-[18px]">sync</span>
+                  <span className="text-xs font-bold hidden sm:inline whitespace-nowrap">Iniciando...</span>
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-[18px] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>rocket_launch</span>
-                  <span className="text-xs font-label-md hidden md:inline whitespace-nowrap">Cold Start</span>
+                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>power_settings_new</span>
+                  <span className="text-xs font-bold hidden sm:inline whitespace-nowrap">Arrancar IA</span>
                 </>
               )}
-            </button>
-
-            <button className="text-on-surface-variant hover:text-primary transition-colors duration-300 flex-shrink-0 ml-2">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>smart_toy</span>
-            </button>
-            <button className="text-on-surface-variant hover:text-primary transition-colors duration-300 flex-shrink-0">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>account_circle</span>
             </button>
           </div>
         </div>
       </header>
 
+      {/* Navegación Global (Drawer) */}
+      <div className={`fixed inset-0 z-[60] transition-all duration-500 ${menuOpen ? 'visible' : 'invisible'}`}>
+        {/* Backdrop (fondo oscuro interactivo) */}
+        <div 
+          className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${menuOpen ? 'opacity-100' : 'opacity-0'}`} 
+          onClick={() => setMenuOpen(false)}
+        ></div>
+        
+        {/* Panel lateral */}
+        <nav className={`absolute top-0 left-0 bottom-0 w-80 bg-surface border-r border-white/20 shadow-2xl transition-transform duration-500 ease-out flex flex-col ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-6 flex items-center justify-between border-b border-outline-variant/30">
+            <h2 className="font-display-lg text-xl font-bold text-primary">Menú Principal</h2>
+            <button onClick={() => setMenuOpen(false)} className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center hover:bg-error-container hover:text-error transition-colors">
+              <span className="material-symbols-outlined text-sm">close</span>
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {[
+              { to: '/', icon: 'home', label: 'Dashboard Principal' },
+              { to: '/registrar-relato', icon: 'map', label: 'Registrar Relato' },
+              { to: '/segmentos', icon: 'public', label: 'Segmentos Comunitarios' },
+              { to: '/revisiones', icon: 'route', label: 'Cola de Revisiones (BDI)' },
+              { to: '/aprobacion-curricular', icon: 'school', label: 'Aprobación Curricular' },
+              { to: '/analisis-modelos', icon: 'functions', label: 'Análisis de Modelos Mentales' },
+            ].map((link) => (
+              <Link 
+                key={link.to} 
+                to={link.to}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-4 p-4 rounded-2xl hover:bg-primary-container/50 hover:text-primary transition-colors text-on-surface-variant font-bold font-label-md"
+              >
+                <span className="material-symbols-outlined">{link.icon}</span>
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </div>
+
       {/* Main Content */}
-      <div className="relative z-10 pt-[120px] pb-24">
+      <div className="relative z-10 pt-[100px] pb-24">
+        
+        {/* Breadcrumbs */}
+        {(() => {
+          const location = useLocation();
+          if (location.pathname === '/') return null;
+
+          const paths = location.pathname.split('/').filter(p => p);
+          
+          // Diccionario para humanizar las rutas
+          const routeNames = {
+            'registrar-relato': 'Registrar Relato',
+            'modelo-mental': 'Modelo Mental BDI',
+            'ruta-pedagogica': 'Ruta Curricular',
+            'revisiones': 'Cola de Revisiones',
+            'aprobacion-curricular': 'Aprobación Pedagógica',
+            'segmentos': 'Segmentos Comunitarios',
+            'auditoria': 'Auditoría de Datos',
+            'analisis-modelos': 'Análisis Experimental'
+          };
+
+          return (
+            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-4">
+              <nav className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant overflow-x-auto pb-2 scrollbar-hide">
+                <Link to="/" className="hover:text-primary transition-colors flex items-center gap-1 shrink-0">
+                  <span className="material-symbols-outlined text-[14px]">home</span>
+                  Inicio
+                </Link>
+                {paths.map((segment, index) => {
+                  const isLast = index === paths.length - 1;
+                  const to = `/${paths.slice(0, index + 1).join('/')}`;
+                  const label = routeNames[segment] || segment; // Si no está en el diccionario, es un ID dinámico
+                  
+                  return (
+                    <div key={to} className="flex items-center gap-2 shrink-0">
+                      <span className="material-symbols-outlined text-[14px] opacity-50">chevron_right</span>
+                      {isLast ? (
+                        <span className="text-primary">{label.replace(/_/g, ' ')}</span>
+                      ) : (
+                        <Link to={to} className="hover:text-primary transition-colors">{label.replace(/_/g, ' ')}</Link>
+                      )}
+                    </div>
+                  );
+                })}
+              </nav>
+            </div>
+          );
+        })()}
+
         <Outlet />
       </div>
 
