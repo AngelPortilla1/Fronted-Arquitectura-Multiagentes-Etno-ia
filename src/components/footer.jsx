@@ -38,15 +38,14 @@ const Footer = () => (
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
             </Link>
 
-            {/* Oculto temporalmente hasta que la página XAI sea implementada
             <Link
-              to="/xai"
-              className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group"
+              to="/auditoria"
+              className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group flex items-center gap-1"
             >
-              XAI
+              <span className="material-symbols-outlined text-[14px]">psychology</span>
+              Transparencia Algorítmica (XAI)
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            */}
           </nav>
 
           {/* Indicador de "Sistema Operativo" (Coherencia con Header) */}

@@ -49,12 +49,22 @@ export function useApiStatus() {
             const data = await response.json();
             // El backend devuelve: { status: "ok", llm_provider: "ollama", llm_model: "qwen..." }
             const raw = (data.llm_provider || '').toLowerCase();
+            const modelLower = (data.llm_model || '').toLowerCase();
             backendModel = data.llm_model || 'stub';
 
-            if (raw.includes('stub')) {
+            if (raw.includes('stub') || modelLower === 'stub') {
               backendMode = 'Stubs';
+            } else if (modelLower.includes('gemini')) {
+              backendMode = 'Gemini';
+            } else if (modelLower.includes('claude')) {
+              backendMode = 'Anthropic';
+            } else if (modelLower.includes('gpt-') || modelLower.includes('o1-')) {
+              backendMode = 'OpenAI';
             } else if (raw.includes('ollama') || raw.includes('langchain')) {
               backendMode = 'Ollama';
+            } else if (raw === 'openai') {
+              // Si el cliente es OpenAI pero el modelo no es GPT, asume el nombre del modelo o un proveedor compatible
+              backendMode = 'LLM Remoto';
             } else if (raw) {
               backendMode = raw.charAt(0).toUpperCase() + raw.slice(1);
             }
