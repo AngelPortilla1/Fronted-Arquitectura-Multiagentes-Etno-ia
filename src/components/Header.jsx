@@ -180,7 +180,9 @@ export default function Header() {
             </div>
 
             {[
-              { to: '/', icon: 'dashboard', label: 'Dashboard Principal' },
+              { to: '/', icon: 'home', label: 'Inicio' },
+              { to: '/dashboard', icon: 'query_stats', label: 'Estado del Sistema' },
+              { to: '/consentimiento', icon: 'policy', label: 'Gestión de Consentimiento' },
               { to: '/registrar-relato', icon: 'map', label: 'Registrar Relato' },
               { to: '/segmentos', icon: 'public', label: 'Segmentos Comunitarios' },
               { to: '/revisiones', icon: 'route', label: 'Cola de Revisiones (BDI)' },

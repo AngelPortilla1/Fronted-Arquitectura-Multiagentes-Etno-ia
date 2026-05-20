@@ -37,7 +37,9 @@ export default function Layout() {
             'aprobacion-curricular': 'Aprobación Pedagógica',
             'segmentos': 'Segmentos Comunitarios',
             'auditoria': 'Auditoría de Datos',
-            'analisis-modelos': 'Análisis Experimental'
+            'analisis-modelos': 'Análisis Experimental',
+            'dashboard': 'Estado del Sistema',
+            'consentimiento': 'Gestión de Consentimiento',
           };
 
           return (

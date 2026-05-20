@@ -66,18 +66,35 @@ export default function P3_RutaPedagogica() {
             </p>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase ${
-              route.risks?.length > 0 
-                ? "bg-error-container/10 border-error/20 text-error" 
-                : "bg-primary-container/5 border-primary/20 text-primary"
-            }`}>
-              <span className="material-symbols-outlined text-sm">
-                {route.risks?.length > 0 ? "warning" : "verified_user"}
-              </span>
-              <span className="tracking-wide">
-                {route.risks?.length > 0 ? route.risks[0] : "Sin riesgos detectados"}
-              </span>
-            </div>
+            {(() => {
+              const hasExplicitRisks = route.risks?.length > 0;
+              const riskScore = route.objective_terms?.risk || 0;
+              const hasCalculatedRisk = riskScore > 0.1;
+              const isError = hasExplicitRisks;
+              const isWarning = !hasExplicitRisks && hasCalculatedRisk;
+              
+              return (
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase ${
+                  isError
+                    ? "bg-error-container/10 border-error/20 text-error" 
+                    : isWarning
+                    ? "bg-warning-container/10 border-warning/20 text-warning"
+                    : "bg-primary-container/5 border-primary/20 text-primary"
+                }`}>
+                  <span className="material-symbols-outlined text-sm">
+                    {isError ? "warning" : isWarning ? "info" : "verified_user"}
+                  </span>
+                  <span className="tracking-wide">
+                    {isError 
+                      ? route.risks[0]
+                      : isWarning
+                      ? `⚠️ Riesgo pedagógico: ${(riskScore * 100).toFixed(0)}%`
+                      : "Sin riesgos detectados"
+                    }
+                  </span>
+                </div>
+              );
+            })()}
             {/* Indicador de uso de LLM */}
             <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase transition-all ${
               !isStubMode 

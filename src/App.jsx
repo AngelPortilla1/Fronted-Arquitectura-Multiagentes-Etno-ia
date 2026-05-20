@@ -9,6 +9,8 @@ import P5_Segmentos from './pages/P5_Segmentos';
 import P6_AprobacionCurricular from './pages/P6_AprobacionCurricular';
 import P7_Auditoria from './pages/P7_Auditoria';
 import MentalModelsAnalysis from './pages/MentalModelsAnalysis';
+import P_DashboardResumen from './pages/P_DashboardResumen';
+import P_GestionConsentimiento from './pages/P_GestionConsentimiento';
 import P404 from './pages/P404';
 import ScrollToTop from './components/ScrollToTop';
 import { ToastProvider } from './components/ToastContext';
@@ -31,6 +33,8 @@ export default function App() {
           
           <Route path="/auditoria/:pid" element={<P7_Auditoria />} />
           <Route path="/analisis-modelos" element={<MentalModelsAnalysis />} />
+          <Route path="/dashboard" element={<P_DashboardResumen />} />
+          <Route path="/consentimiento" element={<P_GestionConsentimiento />} />
           
             {/* F4: Pantalla 404 Catch-all */}
             <Route path="*" element={<P404 />} />

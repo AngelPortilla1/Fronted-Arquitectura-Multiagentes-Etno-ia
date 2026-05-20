@@ -9,6 +9,8 @@ export const API_ENDPOINTS = {
   REVIEWS: `${BASE_URL}/reviews`,
   AUDIT: `${BASE_URL}/audit`,
   COLD_START: `${BASE_URL}/demo/cold-start`,
+  DASHBOARD_SUMMARY: `${BASE_URL}/dashboard/summary`,
+  CONSENTS: `${BASE_URL}/participants/consents`,
   REVOKE: `${BASE_URL}/participants`  // Se usa con getRevokeUrl(pid)
 };
 
