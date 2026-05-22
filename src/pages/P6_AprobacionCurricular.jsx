@@ -22,7 +22,7 @@ export default function P6_AprobacionCurricular() {
         const data = await response.json();
         // Filtramos localmente para quedarnos solo con las de tipo "curriculum" (o adaptarlo a tu estructura)
         const filteredData = Array.isArray(data) 
-          ? data.filter(item => item.payload?.type === 'curriculum' || !item.payload?.type) // Asumiendo estructura, puedes ajustar la condición
+          ? data.filter(item => item.stage === 'M_CURR')
           : [];
         setCurricula(filteredData);
         setSelectedItem(filteredData.length > 0 ? filteredData[0] : null); // Seleccionamos el primero por defecto
@@ -196,7 +196,7 @@ export default function P6_AprobacionCurricular() {
                         </div>
                         <div className="flex-1">
                           <h4 className="font-bold text-on-surface">{step.title}</h4>
-                          <p className="text-sm text-on-surface-variant">{step.type}</p>
+                          <p className="text-sm text-on-surface-variant">{step.assessment || step.competence}</p>
                         </div>
                       </div>
                     ))

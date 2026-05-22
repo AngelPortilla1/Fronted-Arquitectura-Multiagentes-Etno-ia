@@ -94,6 +94,10 @@ export default function P7_Auditoria() {
           return `Razonamiento LLM: "${payload.explanation.substring(0, 80)}..."`;
         case 'open_review':
           return `Revisión Humana Requerida (Estado: ${payload.status}). Rol: ${payload.required_role}`;
+        case 'approve_review':
+          return `Aprobación Humana registrada. Review ID: ${payload.review_id.substring(0,8)}... Por: ${payload.resolved_by}`;
+        case 'reject_review':
+          return `Rechazo Humano registrado. Review ID: ${payload.review_id.substring(0,8)}... Por: ${payload.resolved_by}`;
         case 'persist_delta':
           return `Delta guardado en base de datos. Hash de integridad: ${payload.data_hash.substring(0, 16)}...`;
         default:
@@ -166,8 +170,8 @@ export default function P7_Auditoria() {
                       <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full tracking-widest ${
                         log.memory_layer === 'M_policy' ? 'bg-error-container text-on-error-container' :
                         log.memory_layer === 'M_sem' ? 'bg-secondary-container text-on-secondary-container' :
-                        log.memory_layer === 'M_graph' ? 'bg-tertiary-container text-on-tertiary-container' :
-                        'bg-primary-container text-on-primary-container'
+                        log.memory_layer === 'M_graph' ? 'bg-tertiary-fixed text-on-tertiary-fixed-variant' :
+                        'bg-primary-fixed text-on-primary-fixed-variant'
                       }`}>
                         {log.memory_layer}
                       </span>

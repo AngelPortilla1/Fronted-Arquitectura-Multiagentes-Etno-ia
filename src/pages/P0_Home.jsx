@@ -188,12 +188,12 @@ export default function P0_Home() {
             Análisis de inteligencia colectiva. Identificación de segmentos comunitarios, visualización de brechas digitales y toma de decisiones a nivel regional.
           </p>
 
-          <div className="mt-auto flex items-center gap-2 bg-tertiary-container/30 px-3 py-1.5 rounded-full border border-tertiary-container w-full overflow-hidden">
+          <div className="mt-auto flex items-center gap-2 bg-tertiary-fixed/30 px-3 py-1.5 rounded-full border border-tertiary-fixed-dim/30 w-full overflow-hidden">
             <div className="relative flex h-2 w-2 flex-shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-tertiary"></span>
             </div>
-            <span className="font-label-md text-label-md text-on-tertiary-container truncate">
+            <span className="font-label-md text-label-md text-on-tertiary-fixed-variant truncate">
               {summary && summary.latest_segment
                 ? `Último Segmento: ${summary.latest_segment.segment_id.slice(0, 15)}...`
                 : 'Análisis Macro'}

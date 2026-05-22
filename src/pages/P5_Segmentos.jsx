@@ -87,7 +87,7 @@ export default function P5_Segmentos() {
                   {seg.label || `Segmento ${seg.segment_id}`}
                 </h2>
               </div>
-              <div className="bg-primary-container text-on-primary-container w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-inner shrink-0 relative" title="Cantidad de miembros">
+              <div className="bg-primary text-on-primary w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-inner shrink-0 relative" title="Cantidad de miembros">
                 {seg.member_ids ? seg.member_ids.length : 0}
                 <span className="material-symbols-outlined absolute -bottom-1 -right-1 text-sm bg-surface rounded-full">group</span>
               </div>
@@ -120,19 +120,19 @@ export default function P5_Segmentos() {
                           )}
                           <div className="flex flex-wrap gap-2">
                             {audioMatch && (
-                              <span className="px-3 py-1.5 bg-tertiary-container/30 text-on-tertiary-container border border-tertiary-container rounded-full text-xs font-bold flex items-center gap-1.5">
+                              <span className="px-3 py-1.5 bg-tertiary-fixed/40 text-on-tertiary-fixed-variant border border-tertiary-fixed-dim/30 rounded-full text-xs font-bold flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[14px]">mic</span>
                                 Perfil Audio: {audioMatch[1]}
                               </span>
                             )}
                             {dataMatch && (
-                              <span className="px-3 py-1.5 bg-secondary-container/30 text-on-secondary-container border border-secondary-container rounded-full text-xs font-bold flex items-center gap-1.5">
+                              <span className="px-3 py-1.5 bg-secondary-fixed/40 text-on-secondary-fixed-variant border border-secondary-fixed-dim/30 rounded-full text-xs font-bold flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[14px]">shield</span>
                                 Sensibilidad Datos: {dataMatch[1]}
                               </span>
                             )}
                             {recMatch && (
-                              <span className="px-3 py-1.5 bg-primary-container/30 text-on-primary-container border border-primary-container rounded-full text-xs font-bold flex items-center gap-1.5">
+                              <span className="px-3 py-1.5 bg-primary-fixed/40 text-on-primary-fixed-variant border border-primary-fixed-dim/30 rounded-full text-xs font-bold flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[14px]">lightbulb</span>
                                 Apertura a Recomendaciones: {recMatch[1]}
                               </span>

@@ -261,15 +261,15 @@ function TupleReadingPanel({ values = {}, literacy = {}, uncertaintySources = {}
     {
       sym: 'Gᵢ',
       label: 'Grafo de Conocimiento',
-      color: 'text-primary',
-      bg: 'bg-primary-container/20 border-primary-container/40',
+      color: 'text-on-primary-fixed-variant',
+      bg: 'bg-primary-fixed/20 border-primary-fixed-dim/40',
       content: `${nodes.length} nodos · ${edges.length} relaciones · Rev. ${revision}`,
     },
     {
       sym: 'vᵢ',
       label: 'Valores Culturales',
-      color: 'text-secondary',
-      bg: 'bg-secondary-container/20 border-secondary-container/40',
+      color: 'text-on-secondary-fixed-variant',
+      bg: 'bg-secondary-fixed/20 border-secondary-fixed-dim/40',
       content: Object.keys(values).length > 0
         ? Object.entries(values).map(([k, v]) => `${k} (${Math.round(v * 100)}%)`).join(' · ')
         : 'Sin valores explícitos registrados.',
@@ -277,8 +277,8 @@ function TupleReadingPanel({ values = {}, literacy = {}, uncertaintySources = {}
     {
       sym: 'ℓᵢ',
       label: 'Perfil de Alfabetización',
-      color: 'text-on-tertiary-container',
-      bg: 'bg-tertiary-container/20 border-tertiary-container/40',
+      color: 'text-on-tertiary-fixed-variant',
+      bg: 'bg-tertiary-fixed/20 border-tertiary-fixed-dim/40',
       content: Object.keys(literacy).length > 0
         ? Object.entries(literacy).map(([k, v]) => `${k}: ${(v * 100).toFixed(1)}%`).join(' · ')
         : 'Perfil de alfabetización base incipiente.',
@@ -406,12 +406,18 @@ export default function P2_ModeloMental() {
     finally { setLoading(false); }
   };
 
+  // Inicializar activeKinds cuando llegan nodos nuevos (solo si está vacío)
+  useEffect(() => {
+    const { nodes } = rawData;
+    if (nodes.length > 0 && activeKinds.size === 0) {
+      const allKinds = [...new Set(nodes.map(n => n.kind ?? n.group ?? 'concept'))];
+      setActiveKinds(new Set(allKinds));
+    }
+  }, [rawData]); // NO incluir activeKinds aquí para evitar bucle infinito
+
   // Construir graphData filtrado
   useEffect(() => {
     const { nodes, edges } = rawData;
-    const allKinds = [...new Set(nodes.map(n => n.kind ?? n.group ?? 'concept'))];
-    setActiveKinds(prev => prev.size === 0 ? new Set(allKinds) : prev);
-
     const filteredNodes = nodes.filter(n => activeKinds.size === 0 || activeKinds.has(n.kind ?? n.group ?? 'concept'));
     const nodeIds = new Set(filteredNodes.map(n => n.id));
     const filteredEdges = edges.filter(e => {
@@ -458,7 +464,7 @@ export default function P2_ModeloMental() {
       <div className="flex items-center gap-4 shrink-0 bg-surface/60 backdrop-blur-md p-4 rounded-3xl border border-outline-variant/30 shadow-sm">
         <button 
           onClick={() => navigate('/')} 
-          className="bg-surface-container hover:bg-primary-container text-on-surface-variant hover:text-primary w-12 h-12 rounded-full flex items-center justify-center transition-colors border border-outline-variant/30"
+          className="bg-surface-container hover:bg-primary-fixed/50 text-on-surface-variant hover:text-primary w-12 h-12 rounded-full flex items-center justify-center transition-colors border border-outline-variant/30"
         >
           <span className="material-symbols-outlined text-xl">arrow_back</span>
         </button>
@@ -500,7 +506,7 @@ export default function P2_ModeloMental() {
           {/* Toggle */}
           <button
             onClick={() => setLeftOpen(v => !v)}
-            className="hidden md:flex items-center justify-center self-end mb-2 w-8 h-8 rounded-full bg-surface-container border border-outline-variant/30 hover:bg-primary-container text-on-surface-variant hover:text-primary transition-colors"
+            className="hidden md:flex items-center justify-center self-end mb-2 w-8 h-8 rounded-full bg-surface-container border border-outline-variant/30 hover:bg-primary-fixed/50 text-on-surface-variant hover:text-primary transition-colors"
             title={leftOpen ? 'Cerrar panel' : 'Abrir panel'}
           >
             <span className="material-symbols-outlined text-sm">{leftOpen ? 'chevron_left' : 'chevron_right'}</span>

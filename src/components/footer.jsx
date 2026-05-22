@@ -23,7 +23,7 @@ const Footer = () => (
           {/* Navegación Secundaria */}
           <nav className="flex gap-8">
             <Link
-              to="/analisis-modelos"
+              to="/documentacion"
               className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/70 hover:text-primary transition-colors relative group"
             >
               Documentación

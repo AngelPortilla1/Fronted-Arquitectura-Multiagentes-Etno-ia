@@ -7,9 +7,9 @@ import { useNavigate } from 'react-router-dom';
 /** Un término de la tupla con su descripción */
 const TupleParam = ({ symbol, name, desc, color = 'primary' }) => {
   const colorMap = {
-    primary:   { bg: 'bg-primary-container/20',   border: 'border-primary-container/40',   text: 'text-primary',   sym: 'text-primary'   },
-    secondary: { bg: 'bg-secondary-container/20', border: 'border-secondary-container/40', text: 'text-secondary', sym: 'text-secondary' },
-    tertiary:  { bg: 'bg-tertiary-container/20',  border: 'border-tertiary-container/40',  text: 'text-on-tertiary-container', sym: 'text-on-tertiary-container' },
+    primary:   { bg: 'bg-primary-fixed/20',   border: 'border-primary-fixed-dim/40',   text: 'text-on-primary-fixed-variant',   sym: 'text-on-primary-fixed-variant'   },
+    secondary: { bg: 'bg-secondary-fixed/20', border: 'border-secondary-fixed-dim/40', text: 'text-on-secondary-fixed-variant', sym: 'text-on-secondary-fixed-variant' },
+    tertiary:  { bg: 'bg-tertiary-fixed/20',  border: 'border-tertiary-fixed-dim/40',  text: 'text-on-tertiary-fixed-variant', sym: 'text-on-tertiary-fixed-variant' },
     surface:   { bg: 'bg-surface-container',      border: 'border-outline-variant',        text: 'text-on-surface', sym: 'text-on-surface-variant' },
   };
   const c = colorMap[color];
@@ -141,7 +141,7 @@ const MentalModelsAnalysis = () => {
                       { sym: ',',   color: 'text-outline',             label: ''      },
                       { sym: 'vᵢ', color: 'text-secondary',           label: 'Valores' },
                       { sym: ',',   color: 'text-outline',             label: ''      },
-                      { sym: 'ℓᵢ', color: 'text-on-tertiary-container', label: 'Alfabetización' },
+                      { sym: 'ℓᵢ', color: 'text-on-tertiary-fixed-variant', label: 'Alfabetización' },
                       { sym: ',',   color: 'text-outline',             label: ''      },
                       { sym: 'qᵢ', color: 'text-on-surface-variant',  label: 'Incertidumbre' },
                     ].map((t, i) =>
@@ -214,16 +214,16 @@ const MentalModelsAnalysis = () => {
               <PipelineStep step="1" icon="mic"          title="Captura de Relato"   desc="Narrativa oral o escrita del productor agrícola"   accent="bg-primary"   delay="0ms"   />
               <PipelineStep step="2" icon="memory"       title="Inferencia LLM"      desc="OllamaClient extrae Gᵢ, vᵢ y ℓᵢ del texto"       accent="bg-secondary" delay="100ms" />
               <PipelineStep step="3" icon="hub"          title="Agrupamiento Híbrido" desc="Distancia Fisher-Rao + similitud de valores vᵢ"   accent="bg-[#4d6453]" delay="200ms" />
-              <PipelineStep step="4" icon="front_hand"   title="Validación Humana"   desc="Docente revisa y aprueba el borrador del modelo"  accent="bg-on-tertiary-container" delay="300ms" />
+              <PipelineStep step="4" icon="front_hand"   title="Validación Humana"   desc="Docente revisa y aprueba el borrador del modelo"  accent="bg-tertiary" delay="300ms" />
             </div>
 
             {/* Distancia Fisher-Rao callout */}
-            <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl bg-tertiary-container/10 border border-tertiary-container/30">
-              <div className="shrink-0 w-10 h-10 rounded-xl bg-tertiary-container/40 border border-tertiary-container/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-tertiary-container text-[20px]">calculate</span>
+            <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl bg-tertiary-fixed/30 border border-tertiary-fixed-dim/30">
+              <div className="shrink-0 w-10 h-10 rounded-xl bg-tertiary-fixed/40 border border-tertiary-fixed-dim/30 flex items-center justify-center">
+                <span className="material-symbols-outlined text-on-tertiary-fixed-variant text-[20px]">calculate</span>
               </div>
               <div className="flex-1">
-                <p className="text-xs font-bold uppercase tracking-widest text-on-tertiary-container mb-1">Métrica de Agrupamiento</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-on-tertiary-fixed-variant mb-1">Métrica de Agrupamiento</p>
                 <div className="flex flex-wrap items-baseline gap-2">
                   <span className="font-mono text-sm font-bold text-on-surface">d(Mᵢ, Mⱼ) = d<sub>FR</sub>(Gᵢ, Gⱼ) + λ · ‖vᵢ − vⱼ‖</span>
                   <span className="text-xs text-on-surface-variant italic">donde λ pondera la similitud cultural entre pares de modelos.</span>

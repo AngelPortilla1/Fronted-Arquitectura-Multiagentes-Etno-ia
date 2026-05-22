@@ -150,12 +150,12 @@ export default function P3_RutaPedagogica() {
             {/* Contenido del Módulo */}
             <div className="w-[calc(100%-4rem)] md:w-[45%] bg-surface/60 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-3">
-                <span className="text-xs font-bold text-primary uppercase tracking-widest">{step.id || step.module_id}</span>
-                <span className="text-[10px] bg-surface-container-high px-2 py-1 rounded text-on-surface-variant font-mono">Agente: {step.agent || "APLAN"}</span>
+                <span className="text-xs font-bold text-primary uppercase tracking-widest">{step.module_id}</span>
+                <span className="text-[10px] bg-surface-container-high px-2 py-1 rounded text-on-surface-variant font-mono">Modalidad: {step.modality}</span>
               </div>
               <h3 className="text-xl font-bold text-on-surface mb-2">{step.title}</h3>
               <p className="text-on-surface-variant mb-6 leading-relaxed italic">
-                "{step.desc || step.rationale}"
+                "{step.assessment || step.rationale}"
               </p>
 
               {/* Tarea F4.1: EvidenceQuote (Trazabilidad Visual) */}

@@ -169,7 +169,7 @@ const handleSubmit = async (e) => {
             <p className="text-sm text-on-surface-variant">
               Transcribe textualmente las necesidades, temores o dudas sobre la tecnología y los datos.
             </p>
-            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${formData.relato.length > 50 ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-highest text-on-surface-variant'}`}>
+            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${formData.relato.length > 50 ? 'bg-primary-fixed text-on-primary-fixed-variant' : 'bg-surface-container-highest text-on-surface-variant'}`}>
               {formData.relato.length} caracteres
             </span>
           </div>

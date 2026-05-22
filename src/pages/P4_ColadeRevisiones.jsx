@@ -30,12 +30,13 @@ export default function P4_ColadeRevisiones() {
       const data = await response.json();
       const allReviews = Array.isArray(data) ? data : [data];
       
-      // Excluir revisiones curriculares (que pertenecen a P6)
-      const bdiReviews = allReviews.filter(
-        item => item.payload?.type !== 'curriculum'
+      // Mostrar revisiones de etapa M_CURR (rutas pedagógicas completas)
+      // Las de ACODE (códigos semánticos) van a P_Códigos
+      const pedagogicalRouteReviews = allReviews.filter(
+        item => item.stage === 'M_CURR' && item.status === 'pending'
       );
       
-      setReviews(bdiReviews);
+      setReviews(pedagogicalRouteReviews);
     } catch (err) {
       setError('Error al cargar los perfiles pendientes. Verifica que tu backend en Python (puerto 8000) esté encendido.');
       console.error(err);
