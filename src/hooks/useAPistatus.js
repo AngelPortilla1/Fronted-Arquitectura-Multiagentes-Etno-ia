@@ -56,6 +56,10 @@ export function useApiStatus() {
               backendMode = 'Stubs';
             } else if (modelLower.includes('gemini')) {
               backendMode = 'Gemini';
+            } else if (modelLower.includes('grok')) {
+              backendMode = 'Grok';
+            } else if (modelLower.includes('llama') || modelLower.includes('mixtral') || modelLower.includes('gemma') || modelLower.includes('groq')) {
+              backendMode = 'Groq';
             } else if (modelLower.includes('claude')) {
               backendMode = 'Anthropic';
             } else if (modelLower.includes('gpt-') || modelLower.includes('o1-')) {

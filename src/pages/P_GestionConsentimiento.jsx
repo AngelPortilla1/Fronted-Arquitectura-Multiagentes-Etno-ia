@@ -225,15 +225,15 @@ export default function P_GestionConsentimiento() {
               >
                 {/* Header de la tarjeta */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${
-                      isFullyRevoked ? 'bg-error text-on-error' : 'bg-primary-container text-primary'
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shadow-md border ${
+                      isFullyRevoked ? 'bg-error text-on-error border-error/20' : 'bg-primary text-on-primary border-primary/20'
                     }`}>
                       {p.pid.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <h2 className="font-bold text-on-surface text-base font-mono">{p.pid}</h2>
-                      <p className="text-xs text-on-surface-variant">
+                      <h2 className="font-black text-on-surface text-xl font-mono tracking-wide">{p.pid}</h2>
+                      <p className="text-sm font-bold text-on-surface mt-0.5">
                         {isFullyRevoked
                           ? '⛔ Todos los consentimientos revocados'
                           : `${active} / ${totalScopes} scopes activos`}

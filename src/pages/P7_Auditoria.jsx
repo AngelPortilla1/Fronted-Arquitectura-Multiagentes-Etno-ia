@@ -118,7 +118,7 @@ export default function P7_Auditoria() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4 flex flex-col h-[calc(100vh-120px)]">
+    <div className="max-w-5xl mx-auto py-8 px-4 flex flex-col min-h-[calc(100vh-120px)]">
       
       {/* Header */}
       <header className="mb-8 flex-shrink-0">
@@ -141,7 +141,7 @@ export default function P7_Auditoria() {
       </header>
 
       {/* Cadena de Auditoría (Línea de tiempo técnica real) */}
-      <div className="flex-1 bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden flex flex-col min-h-0 mb-6">
+      <div className="flex-1 bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden flex flex-col h-[65vh] min-h-[500px] mb-6">
         <div className="bg-surface-container-highest p-4 border-b border-outline-variant/30 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-on-surface-variant">history</span>
