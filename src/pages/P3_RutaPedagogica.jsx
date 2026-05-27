@@ -95,17 +95,33 @@ export default function P3_RutaPedagogica() {
                 </div>
               );
             })()}
-            {/* Indicador de uso de LLM */}
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase transition-all ${
-              !isStubMode 
-                ? "bg-tertiary-fixed text-on-tertiary-fixed border-tertiary/20 shadow-sm" 
-                : "bg-surface-container-high border-outline-variant/30 text-on-surface-variant"
-            }`}>
-              <span className="material-symbols-outlined text-sm">
-                {!isStubMode ? "psychology" : "settings"}
-              </span>
-              {!isStubMode ? `Generado por LLM (${mode})` : "Heurística (Stub)"}
-            </div>
+            {/* Indicador honesto de fuente de la explicación */}
+            {(() => {
+              const src = route.explanation_source || (isStubMode ? 'heuristic' : 'heuristic');
+              if (src === 'llm') {
+                return (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase bg-tertiary-fixed text-on-tertiary-fixed border-tertiary/20 shadow-sm">
+                    <span className="material-symbols-outlined text-sm">psychology</span>
+                    Generado por LLM ({mode})
+                  </div>
+                );
+              }
+              if (src === 'llm_error') {
+                return (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase bg-warning-container/20 border-warning/30 text-warning">
+                    <span className="material-symbols-outlined text-sm">warning_amber</span>
+                    LLM Falló — Heurística Activa
+                  </div>
+                );
+              }
+              // 'heuristic' o stub
+              return (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold uppercase bg-surface-container-high border-outline-variant/30 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-sm">settings</span>
+                  {isStubMode ? 'Heurística (Stub)' : 'Heurística (sin LLM)'}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </header>
@@ -121,10 +137,13 @@ export default function P3_RutaPedagogica() {
             <div>
               <h3 className="font-bold text-on-surface mb-2 flex items-center gap-2">
                 Razonamiento del Agente Explicador (AEXPL)
-                {!isStubMode && (
+                {route.explanation_source === 'llm' && (
                   <span className="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border border-tertiary/20">LLM Activo</span>
                 )}
-                {isStubMode && (
+                {route.explanation_source === 'llm_error' && (
+                  <span className="text-[10px] bg-warning-container/30 text-warning px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border border-warning/30">⚠ LLM Falló</span>
+                )}
+                {(!route.explanation_source || route.explanation_source === 'heuristic') && (
                   <span className="text-[10px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full uppercase tracking-wider font-medium border border-outline-variant/30">Heurística Activa</span>
                 )}
               </h3>

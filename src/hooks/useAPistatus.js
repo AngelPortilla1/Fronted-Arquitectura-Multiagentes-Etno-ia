@@ -66,8 +66,11 @@ export function useApiStatus() {
               backendMode = 'OpenAI';
             } else if (raw.includes('ollama') || raw.includes('langchain')) {
               backendMode = 'Ollama';
+            } else if (raw === 'cloud_api') {
+              // OpenRouter u otro proveedor cloud compatible con la API de OpenAI
+              backendMode = 'OpenRouter';
             } else if (raw === 'openai') {
-              // Si el cliente es OpenAI pero el modelo no es GPT, asume el nombre del modelo o un proveedor compatible
+              // Si el cliente es OpenAI pero el modelo no es GPT conocido
               backendMode = 'LLM Remoto';
             } else if (raw) {
               backendMode = raw.charAt(0).toUpperCase() + raw.slice(1);
