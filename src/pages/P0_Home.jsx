@@ -42,7 +42,7 @@ export default function P0_Home() {
       </div>
 
       <div className="mb-10 text-center animate-in fade-in duration-700 delay-150">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full font-bold hover:bg-primary hover:text-on-primary transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-primary/20">
+        <Link to="/dashboard" className="inline-flex items-center gap-2 bg-[#2E7D32] text-white px-6 py-2.5 rounded-full font-bold hover:bg-[#1B5E20] transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-[#2E7D32]/20">
           <span className="material-symbols-outlined text-[18px]">query_stats</span>
           Ver Estado General del Sistema
         </Link>

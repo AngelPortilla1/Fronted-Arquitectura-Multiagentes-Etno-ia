@@ -159,16 +159,28 @@ export default function P4_ColadeRevisiones() {
                     {!isStubMode ? "psychology" : "settings"}
                   </span>
                   Justificación de AEXPL
-                  {!isStubMode && (
-                    <span className="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full ml-2 border border-tertiary/20 font-bold">
-                      GENERADO POR LLM ({mode.toUpperCase()})
-                    </span>
-                  )}
-                  {isStubMode && (
-                    <span className="text-[10px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full ml-2 border border-outline-variant/30 font-medium">
-                      HEURÍSTICA (STUB)
-                    </span>
-                  )}
+                  {(() => {
+                    const src = review.payload?.explanation_source || (isStubMode ? 'heuristic' : 'heuristic');
+                    if (src === 'llm') {
+                      return (
+                        <span className="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full ml-2 border border-tertiary/20 font-bold">
+                          GENERADO POR LLM ({mode.toUpperCase()})
+                        </span>
+                      );
+                    }
+                    if (src === 'llm_error') {
+                      return (
+                        <span className="text-[10px] bg-warning-container/30 text-warning px-2 py-0.5 rounded-full ml-2 border border-warning/30 font-bold">
+                          LLM FALLÓ — HEURÍSTICA ACTIVA
+                        </span>
+                      );
+                    }
+                    return (
+                      <span className="text-[10px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full ml-2 border border-outline-variant/30 font-medium">
+                        {isStubMode ? 'HEURÍSTICA (STUB)' : 'HEURÍSTICA (SIN LLM)'}
+                      </span>
+                    );
+                  })()}
                 </h3>
                 <p className={`font-body-lg text-on-surface-variant leading-relaxed p-5 rounded-2xl border italic shadow-sm transition-colors ${
                   !isStubMode
