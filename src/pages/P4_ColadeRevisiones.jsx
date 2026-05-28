@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_ENDPOINTS, getReviewApproveUrl } from '../api/client';
+import { API_ENDPOINTS, getReviewApproveUrl, getReviewRejectUrl } from '../api/client';
 import { useApiStatus } from '../hooks/useApiStatus';
 import { useToast } from '../components/ToastContext';
 
@@ -30,13 +30,12 @@ export default function P4_ColadeRevisiones() {
       const data = await response.json();
       const allReviews = Array.isArray(data) ? data : [data];
       
-      // Mostrar revisiones de etapa M_CURR (rutas pedagógicas completas)
-      // Las de ACODE (códigos semánticos) van a P_Códigos
-      const pedagogicalRouteReviews = allReviews.filter(
-        item => item.stage === 'M_CURR' && item.status === 'pending'
+      // Mostrar todas las revisiones que estén pendientes
+      const pendingReviews = allReviews.filter(
+        item => item.status === 'pending'
       );
       
-      setReviews(pedagogicalRouteReviews);
+      setReviews(pendingReviews);
     } catch (err) {
       setError('Error al cargar los perfiles pendientes. Verifica que tu backend en Python (puerto 8000) esté encendido.');
       console.error(err);
@@ -45,17 +44,44 @@ export default function P4_ColadeRevisiones() {
     }
   };
 
-  const handleApprove = async (reviewId) => {
+  const handleApprove = async (review) => {
+    const { review_id, stage, payload } = review;
     try {
-      const response = await fetch(getReviewApproveUrl(reviewId), {
+      const response = await fetch(getReviewApproveUrl(review_id), {
         method: 'POST',
       });
 
       if (response.ok) {
-        showToast('Ruta de aprendizaje aprobada correctamente.', 'success');
-        setReviews(currentReviews => currentReviews.filter(r => r.review_id !== reviewId));
+        showToast(`Revisión de la etapa ${stage} aprobada correctamente.`, 'success');
+        
+        // Si el payload contiene el evento original, lo re-enviamos automáticamente al backend
+        // para continuar su procesamiento con el bypass de aprobación
+        if (payload && payload.event) {
+          showToast('Procesando el relato aprobado con los agentes BDI...', 'info');
+          try {
+            const ingestResponse = await fetch(API_ENDPOINTS.EVENTS, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload.event)
+            });
+            if (ingestResponse.ok) {
+              const resData = await ingestResponse.json();
+              if (resData.status === 'ok' || resData.status === 'ok_with_review') {
+                showToast('¡Modelo mental y ruta pedagógica generados con éxito!', 'success');
+              } else if (resData.status === 'review') {
+                showToast(`El relato avanzó pero requiere revisión en la etapa ${resData.stage}.`, 'info');
+              }
+            } else {
+              showToast('Error al re-procesar el relato aprobado en el backend.', 'error');
+            }
+          } catch (e) {
+            console.error('Error al re-procesar el relato aprobado:', e);
+          }
+        }
+        
+        setReviews(currentReviews => currentReviews.filter(r => r.review_id !== review_id));
       } else {
-        showToast('Hubo un problema al aprobar la ruta en el servidor.', 'error');
+        showToast('Hubo un problema al aprobar la revisión en el servidor.', 'error');
       }
     } catch (err) {
       showToast('Error de red. Revisa tu conexión con el backend.', 'error');
@@ -63,9 +89,22 @@ export default function P4_ColadeRevisiones() {
     }
   };
 
-  const handleReject = (reviewId) => {
-    showToast('Revisión rechazada. Se ha notificado al Agente BDI para reevaluación.', 'info');
-    setReviews(currentReviews => currentReviews.filter(r => r.review_id !== reviewId));
+  const handleReject = async (reviewId) => {
+    try {
+      const response = await fetch(getReviewRejectUrl(reviewId), {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        showToast('Revisión rechazada correctamente.', 'info');
+        setReviews(currentReviews => currentReviews.filter(r => r.review_id !== reviewId));
+      } else {
+        showToast('Hubo un problema al rechazar la revisión en el servidor.', 'error');
+      }
+    } catch (err) {
+      showToast('Error de red. Revisa tu conexión con el backend.', 'error');
+      console.error(err);
+    }
   };
 
   // 1. Pantalla de carga
@@ -122,125 +161,252 @@ export default function P4_ColadeRevisiones() {
         </div>
       ) : (
         <div className="space-y-8">
-          {reviews.map((review) => (
-            <article 
-              key={review.review_id} 
-              className="bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm p-6 md:p-8 rounded-3xl hover:shadow-md transition-shadow group"
-            >
-              {/* Identificación del Productor */}
-              <div className="mb-8 border-b border-outline-variant/30 pb-6">
-                <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <div className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest border border-outline-variant/30 shadow-sm">
-                    <span className="material-symbols-outlined text-[18px] text-primary">person</span>
-                    Productor: {review.pid.replace(/_/g, ' ')}
+          {reviews.map((review) => {
+            const isCurrStage = review.stage === 'M_CURR';
+            const isEthnoStage = review.stage === 'AETHNO';
+            const isIngestionStage = review.stage === 'AING';
+            const isGovStage = review.stage === 'AGOV';
+            const isFairStage = review.stage === 'AFAIR';
+            
+            // Determinar si podemos mostrar el botón "Ver Grafo BDI"
+            // Solo si ya existe un modelo mental guardado (M_CURR, o AFAIR)
+            const canShowGraph = isCurrStage || isFairStage;
+
+            return (
+              <article 
+                key={review.review_id} 
+                className="bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm p-6 md:p-8 rounded-3xl hover:shadow-md transition-shadow group animate-in fade-in slide-in-from-bottom-4 duration-300"
+              >
+                {/* Identificación del Productor */}
+                <div className="mb-8 border-b border-outline-variant/30 pb-6">
+                  <div className="flex flex-wrap items-center gap-3 mb-6">
+                    <div className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest border border-outline-variant/30 shadow-sm">
+                      <span className="material-symbols-outlined text-[18px] text-primary">person</span>
+                      Productor: {review.pid.replace(/_/g, ' ')}
+                    </div>
+                    
+                    <span className="inline-flex items-center gap-1.5 bg-secondary-container/30 text-secondary border border-secondary/20 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                      <span className="material-symbols-outlined text-[14px]">query_stats</span>
+                      Etapa: {review.stage}
+                    </span>
+
+                    {canShowGraph && (
+                      <button 
+                        onClick={() => navigate(`/modelo-mental/${review.pid}`)}
+                        className="text-xs bg-primary text-on-primary px-4 py-2.5 rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-2 font-bold"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">account_tree</span> Ver Grafo BDI
+                      </button>
+                    )}
+                    
+                    <button 
+                      onClick={() => navigate(`/auditoria/${review.pid}`)}
+                      className="text-xs bg-surface-container-highest text-on-surface hover:bg-error-container/10 px-4 py-2.5 rounded-full transition-all flex items-center gap-2 border border-outline-variant/30 font-bold"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">policy</span> Auditoría
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => navigate(`/modelo-mental/${review.pid}`)}
-                    className="text-xs bg-primary text-on-primary px-4 py-2.5 rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-2 font-bold"
+                  
+                  <h2 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface flex items-center gap-3 leading-tight">
+                    {isCurrStage && <>Ruta Sugerida: <span className="capitalize text-primary">{review.payload?.route_type || 'No especificada'}</span></>}
+                    {isEthnoStage && 'Pregunta de Profundización (Probe Etnográfico)'}
+                    {isIngestionStage && 'Normalización / Transcripción (Baja Confianza)'}
+                    {isGovStage && 'Auditoría de Gobernanza y Consentimiento'}
+                    {isFairStage && 'Evaluación de Equidad y Riesgo (AFAIR)'}
+                  </h2>
+                  <p className="text-sm text-on-surface-variant font-medium mt-3">
+                    <strong>Motivo de revisión:</strong> {review.reason}
+                  </p>
+                </div>
+
+                {/* ─── Renderizado Dinámico por Etapa ─── */}
+                
+                {/* 1. Etapa M_CURR (Rutas pedagógicas) */}
+                {isCurrStage && (
+                  <>
+                    {/* Justificación de la IA */}
+                    <div className="mb-8 relative">
+                      <h3 className="font-label-md text-secondary mb-3 flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined">
+                          {!isStubMode ? "psychology" : "settings"}
+                        </span>
+                        Justificación de AEXPL
+                        {(() => {
+                          const src = review.payload?.explanation_source || (isStubMode ? 'heuristic' : 'heuristic');
+                          if (src === 'llm') {
+                            return (
+                              <span className="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full ml-2 border border-tertiary/20 font-bold">
+                                GENERADO POR LLM ({mode.toUpperCase()})
+                              </span>
+                            );
+                          }
+                          if (src === 'llm_error') {
+                            return (
+                              <span className="text-[10px] bg-warning-container/30 text-warning px-2 py-0.5 rounded-full ml-2 border border-warning/30 font-bold">
+                                LLM FALLÓ — HEURÍSTICA ACTIVA
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="text-[10px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full ml-2 border border-outline-variant/30 font-medium">
+                              {isStubMode ? 'HEURÍSTICA (STUB)' : 'HEURÍSTICA (SIN LLM)'}
+                            </span>
+                          );
+                        })()}
+                      </h3>
+                      <p className={`font-body-lg text-on-surface-variant leading-relaxed p-5 rounded-2xl border italic shadow-sm transition-colors ${
+                        !isStubMode
+                          ? "bg-white border-tertiary/20 shadow-tertiary/5"
+                          : "bg-surface-container-highest/50 border-outline-variant/30"
+                      }`}>
+                        "{review.payload?.explanation || 'Sin justificación disponible'}"
+                      </p>
+                    </div>
+
+                    {/* Lista de Módulos */}
+                    <div className="mb-8">
+                      <h3 className="font-label-md text-secondary mb-4 flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined">view_list</span>
+                        Módulos a Asignar
+                      </h3>
+                      <ul className="space-y-4">
+                        {review.payload?.steps && Array.isArray(review.payload.steps) ? (
+                          review.payload.steps.map((step, index) => (
+                            <li key={index} className="flex items-center gap-4 bg-surface-container p-4 rounded-2xl border border-outline-variant/30 transition-colors hover:border-primary/50">
+                              <div className="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-inner">
+                                {index + 1}
+                              </div>
+                              <div>
+                                <p className="font-body-lg font-bold text-on-surface">
+                                  {step.title}
+                                </p>
+                                <p className="text-sm text-on-surface-variant font-mono mt-1">
+                                  ID: {step.module_id}
+                                </p>
+                              </div>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-on-surface-variant italic">Sin módulos definidos</li>
+                        )}
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                {/* 2. Etapa AETHNO (Probes sensibles) */}
+                {isEthnoStage && (
+                  <div className="mb-8 space-y-6 animate-in fade-in duration-300">
+                    <div className="bg-surface-container-highest p-5 rounded-2xl border border-outline-variant/30">
+                      <h3 className="font-label-md text-secondary mb-3 flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined text-[20px]">help_center</span>
+                        Pregunta de Profundización Sugerida por LLM
+                      </h3>
+                      <p className="font-body-lg text-on-surface font-bold leading-relaxed mb-3">
+                        "{review.payload?.question}"
+                      </p>
+                      <div className="flex gap-4 text-xs text-on-surface-variant font-medium mt-1">
+                        <span>Incertidumbre: <strong>{Math.round((review.payload?.uncertainty ?? 0.25) * 100)}%</strong></span>
+                        <span>Sensibilidad: <strong className="text-error">ALTA (Requiere Revisión)</strong></span>
+                      </div>
+                    </div>
+
+                    <div className="bg-surface p-5 rounded-2xl border border-outline-variant/20 shadow-sm">
+                      <h3 className="font-label-md text-secondary mb-2 flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined text-[20px]">description</span>
+                        Justificación Etnográfica
+                      </h3>
+                      <p className="font-body-md text-on-surface-variant italic leading-relaxed">
+                        "{review.payload?.justification}"
+                      </p>
+                    </div>
+
+                    {review.payload?.event?.content && (
+                      <div className="bg-surface-container/50 p-4 rounded-2xl border border-outline-variant/20">
+                        <h4 className="text-xs font-bold text-on-surface-variant uppercase mb-2">Relato Original Ingresado:</h4>
+                        <p className="text-sm italic text-on-surface-variant">"{review.payload.event.content}"</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. Etapa AING (Baja confianza) */}
+                {isIngestionStage && (
+                  <div className="mb-8 space-y-4 animate-in fade-in duration-300">
+                    <div className="bg-surface-container-highest p-5 rounded-2xl border border-outline-variant/30">
+                      <h3 className="font-label-md text-secondary mb-2 flex items-center gap-2 uppercase tracking-wider">
+                        Texto Normalizado Resultante
+                      </h3>
+                      <p className="font-body-lg text-on-surface leading-relaxed italic">
+                        "{review.payload?.normalized_text}"
+                      </p>
+                      <div className="mt-3 text-xs text-on-surface-variant font-medium">
+                        Confianza de Transcripción: <strong className="text-error">{Math.round((review.payload?.confidence ?? 0) * 100)}%</strong> (Umbral mínimo requerido: 55%)
+                      </div>
+                    </div>
+
+                    {review.payload?.event?.content && (
+                      <div className="bg-surface p-4 rounded-2xl border border-outline-variant/20">
+                        <h4 className="text-xs font-bold text-on-surface-variant uppercase mb-2">Texto Original:</h4>
+                        <p className="text-sm italic text-on-surface-variant">"{review.payload.event.content}"</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 4. Etapa AGOV (Gobernanza / Consentimiento restringido) */}
+                {isGovStage && (
+                  <div className="mb-8 space-y-4 bg-surface-container-highest p-5 rounded-2xl border border-outline-variant/30 animate-in fade-in duration-300">
+                    <h3 className="font-label-md text-secondary mb-2 flex items-center gap-2 uppercase tracking-wider">
+                      Estado de Consentimiento
+                    </h3>
+                    <div className="text-sm space-y-2">
+                      <p>Decisión de AGOV: <strong className="text-warning">REQUIERE REVISIÓN</strong></p>
+                      <p><strong>Permisos Permitidos:</strong> {review.payload?.allowed_scopes?.join(', ') || 'Ninguno'}</p>
+                      <p><strong>Permisos Restringidos:</strong> <span className="text-error font-bold">{review.payload?.restricted_scopes?.join(', ') || 'Ninguno'}</span></p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. Etapa AFAIR (Riesgo y Equidad) */}
+                {isFairStage && (
+                  <div className="mb-8 space-y-4 bg-error-container/15 p-5 rounded-2xl border border-error/25 text-on-surface animate-in fade-in duration-300">
+                    <h3 className="font-label-md text-error mb-2 flex items-center gap-2 uppercase tracking-wider">
+                      Alerta de Riesgo o Equidad
+                    </h3>
+                    <div className="text-sm space-y-2">
+                      <p>Decisión de Equidad: <strong className="text-error">{review.payload?.decision}</strong></p>
+                      <p><strong>Puntuación de Riesgo:</strong> {Math.round((review.payload?.risk_score ?? 0) * 100)}%</p>
+                      <p><strong>Razones del Alerta:</strong></p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {review.payload?.reasons?.map((r, i) => <li key={i}>{r}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* Botones de Acción (Touch-Friendly) */}
+                <div className="flex flex-col md:flex-row justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => handleReject(review.review_id)}
+                    className="w-full md:w-auto bg-surface-container hover:bg-error-container hover:text-error text-on-surface px-8 py-4 rounded-2xl font-label-md text-lg transition-all duration-300 flex items-center justify-center gap-3"
+                    aria-label="Rechazar esta revisión"
                   >
-                    <span className="material-symbols-outlined text-[18px]">account_tree</span> Ver Grafo BDI
+                    <span className="material-symbols-outlined">cancel</span>
+                    Rechazar
                   </button>
-                  <button 
-                    onClick={() => navigate(`/auditoria/${review.pid}`)}
-                    className="text-xs bg-surface-container-highest text-on-surface hover:bg-error-container/10 px-4 py-2.5 rounded-full transition-all flex items-center gap-2 border border-outline-variant/30 font-bold"
+                  <button
+                    onClick={() => handleApprove(review)}
+                    className="w-full md:w-auto bg-primary text-on-primary px-8 py-4 rounded-2xl font-label-md text-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-3"
+                    aria-label="Aprobar esta revisión"
                   >
-                    <span className="material-symbols-outlined text-[18px]">policy</span> Auditoría
+                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    {isCurrStage ? 'Aprobar Ruta Pedagógica' : 'Aprobar y Registrar Relato'}
                   </button>
                 </div>
-                <h2 className="font-headline-md text-2xl md:text-3xl font-bold text-on-surface flex items-center gap-3">
-                  Ruta Sugerida: <span className="capitalize text-primary">{review.payload?.route_type || 'No especificada'}</span>
-                </h2>
-              </div>
-
-              {/* Justificación de la IA */}
-              <div className="mb-8 relative">
-                <h3 className="font-label-md text-secondary mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <span className="material-symbols-outlined">
-                    {!isStubMode ? "psychology" : "settings"}
-                  </span>
-                  Justificación de AEXPL
-                  {(() => {
-                    const src = review.payload?.explanation_source || (isStubMode ? 'heuristic' : 'heuristic');
-                    if (src === 'llm') {
-                      return (
-                        <span className="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full ml-2 border border-tertiary/20 font-bold">
-                          GENERADO POR LLM ({mode.toUpperCase()})
-                        </span>
-                      );
-                    }
-                    if (src === 'llm_error') {
-                      return (
-                        <span className="text-[10px] bg-warning-container/30 text-warning px-2 py-0.5 rounded-full ml-2 border border-warning/30 font-bold">
-                          LLM FALLÓ — HEURÍSTICA ACTIVA
-                        </span>
-                      );
-                    }
-                    return (
-                      <span className="text-[10px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full ml-2 border border-outline-variant/30 font-medium">
-                        {isStubMode ? 'HEURÍSTICA (STUB)' : 'HEURÍSTICA (SIN LLM)'}
-                      </span>
-                    );
-                  })()}
-                </h3>
-                <p className={`font-body-lg text-on-surface-variant leading-relaxed p-5 rounded-2xl border italic shadow-sm transition-colors ${
-                  !isStubMode
-                    ? "bg-white border-tertiary/20 shadow-tertiary/5"
-                    : "bg-surface-container-highest/50 border-outline-variant/30"
-                }`}>
-                  "{review.payload?.explanation || 'Sin justificación disponible'}"
-                </p>
-              </div>
-
-              {/* Lista de Módulos */}
-              <div className="mb-8">
-                <h3 className="font-label-md text-secondary mb-4 flex items-center gap-2 uppercase tracking-wider">
-                  <span className="material-symbols-outlined">view_list</span>
-                  Módulos a Asignar
-                </h3>
-                <ul className="space-y-4">
-                  {review.payload?.steps && Array.isArray(review.payload.steps) ? (
-                    review.payload.steps.map((step, index) => (
-                      <li key={index} className="flex items-center gap-4 bg-surface-container p-4 rounded-2xl border border-outline-variant/30 transition-colors hover:border-primary/50">
-                        <div className="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-inner">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-body-lg font-bold text-on-surface">
-                            {step.title}
-                          </p>
-                          <p className="text-sm text-on-surface-variant font-mono mt-1">
-                            ID: {step.module_id}
-                          </p>
-                        </div>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-on-surface-variant italic">Sin módulos definidos</li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Botones de Acción (Touch-Friendly) */}
-              <div className="flex flex-col md:flex-row justify-end gap-3 pt-2">
-                <button
-                  onClick={() => handleReject(review.review_id)}
-                  className="w-full md:w-auto bg-surface-container hover:bg-error-container hover:text-error text-on-surface px-8 py-4 rounded-2xl font-label-md text-lg transition-all duration-300 flex items-center justify-center gap-3"
-                  aria-label="Rechazar esta ruta de aprendizaje"
-                >
-                  <span className="material-symbols-outlined">cancel</span>
-                  Rechazar
-                </button>
-                <button
-                  onClick={() => handleApprove(review.review_id)}
-                  className="w-full md:w-auto bg-primary text-on-primary px-8 py-4 rounded-2xl font-label-md text-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-3"
-                  aria-label="Aprobar esta ruta de aprendizaje"
-                >
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                  Aprobar Ruta Pedagógica
-                </button>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>

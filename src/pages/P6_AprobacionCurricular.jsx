@@ -98,29 +98,43 @@ export default function P6_AprobacionCurricular() {
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {curricula.map(item => (
-                <button
-                  key={item.review_id}
-                  onClick={() => setSelectedItem(item)}
-                  className={`w-full text-left p-4 rounded-2xl transition-all border ${
-                    selectedItem?.review_id === item.review_id 
-                      ? 'bg-secondary-container/20 border-secondary shadow-sm' 
-                      : 'bg-surface-container hover:bg-surface-container-high border-transparent'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-mono text-on-surface-variant">{item.review_id.split('_')[2]}</span>
-                    {/* Tarea F4.3: RiskBadge integrado */}
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                      item.risk_level === 'Alto' ? 'bg-error-container text-on-error-container' : 'bg-primary-container text-on-primary-container'
-                    }`}>
-                      Riesgo {item.risk_level}
-                    </span>
-                  </div>
-                  <h4 className="font-headline-md text-lg text-on-surface truncate">{item.payload.route_type}</h4>
-                  <p className="text-sm text-on-surface-variant truncate mt-1">Dirigido a: {item.pid.replace(/_/g, ' ')}</p>
-                </button>
-              ))}
+              {curricula.map(item => {
+                const getRiskLevel = (it) => {
+                  if (it.payload?.risks?.length > 0) return 'Alto';
+                  const riskVal = it.payload?.objective_terms?.risk || 0;
+                  if (riskVal > 0.4) return 'Alto';
+                  if (riskVal > 0.15) return 'Medio';
+                  return 'Bajo';
+                };
+                const riskLevel = getRiskLevel(item);
+                return (
+                  <button
+                    key={item.review_id}
+                    onClick={() => setSelectedItem(item)}
+                    className={`w-full text-left p-4 rounded-2xl transition-all border ${
+                      selectedItem?.review_id === item.review_id 
+                        ? 'bg-secondary-container/20 border-secondary shadow-sm' 
+                        : 'bg-surface-container hover:bg-surface-container-high border-transparent'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-mono text-on-surface-variant">{item.review_id.substring(0, 8)}</span>
+                      {/* Tarea F4.3: RiskBadge integrado */}
+                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                        riskLevel === 'Alto'
+                          ? 'bg-error-container text-on-error-container'
+                          : riskLevel === 'Medio'
+                          ? 'bg-warning-container/20 border-warning/30 text-warning'
+                          : 'bg-primary-container text-on-primary-container'
+                      }`}>
+                        Riesgo {riskLevel}
+                      </span>
+                    </div>
+                    <h4 className="font-headline-md text-lg text-on-surface truncate">{item.payload.route_type}</h4>
+                    <p className="text-sm text-on-surface-variant truncate mt-1">Dirigido a: {item.pid.replace(/_/g, ' ')}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

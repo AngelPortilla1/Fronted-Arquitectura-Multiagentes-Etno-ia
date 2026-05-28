@@ -146,7 +146,7 @@ export default function P0_Home() {
         </Link>
 
         {/* Card 3: Auditor de Datos */}
-        <Link to="/auditoria/p1" className="group relative flex flex-col items-start p-8 rounded-3xl bg-surface/60 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(27,48,34,0.15)] transition-all duration-500 hover:-translate-y-2 text-left overflow-hidden">
+        <Link to="/auditoria" className="group relative flex flex-col items-start p-8 rounded-3xl bg-surface/60 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(27,48,34,0.15)] transition-all duration-500 hover:-translate-y-2 text-left overflow-hidden">
           <div className="absolute inset-0 bg-surface-tint opacity-0 group-hover:opacity-5 transition-opacity duration-500"></div>
           <div className="absolute top-0 right-0 w-32 h-32 bg-surface-tint opacity-5 rounded-bl-[100px] -mr-10 -mt-10"></div>
 

@@ -24,8 +24,10 @@ export default function P7_Auditoria() {
       if (response.ok) {
         let data = await response.json();
         
-        // Filtramos para mostrar solo los de este productor (opcional)
-        data = data.filter(log => log.pid === targetPid);
+        // Filtramos para mostrar solo los de este productor si está especificado
+        if (targetPid) {
+          data = data.filter(log => log.pid === targetPid);
+        }
         
         // Ordenamos por fecha más reciente primero (opcional, dependiendo de cómo quieras verlo)
         data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -135,7 +137,7 @@ export default function P7_Auditoria() {
             Trazabilidad de eventos, firmas criptográficas y gestión de revocación de consentimiento (Privacy by Design).
           </p>
           <div className="bg-surface-container-highest px-4 py-2 rounded-xl text-sm font-mono border border-outline-variant/50">
-            PID Auditado: <span className="font-bold text-on-surface">{targetPid}</span>
+            PID Auditado: <span className="font-bold text-on-surface">{targetPid || 'Todos'}</span>
           </div>
         </div>
       </header>
@@ -207,7 +209,8 @@ export default function P7_Auditoria() {
       </div>
 
       {/* Panel de Revocación (Zona Peligrosa al Final) */}
-      <div className="bg-error-container/10 border border-error/30 p-6 rounded-3xl flex flex-col gap-5 shrink-0">
+      {targetPid && (
+        <div className="bg-error-container/10 border border-error/30 p-6 rounded-3xl flex flex-col gap-5 shrink-0">
         <div className="flex items-start gap-3">
           <span className="material-symbols-outlined text-error text-3xl mt-0.5">warning</span>
           <div>
@@ -245,6 +248,7 @@ export default function P7_Auditoria() {
           </button>
         </div>
       </div>
+      )}
 
       {/* Modal de Confirmación */}
       <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-300 ${showConfirmModal ? 'visible opacity-100' : 'invisible opacity-0'}`}>

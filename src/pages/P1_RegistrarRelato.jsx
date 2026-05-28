@@ -18,10 +18,10 @@ export default function P1_RegistrarRelato() {
   });
 
   // El botón solo se habilita si ambos consentimientos obligatorios están marcados y hay texto
-  const isFormValid = formData.pid.trim() !== '' && 
-                      formData.relato.trim() !== '' && 
-                      formData.consent_data && 
-                      formData.consent_ai;
+  const isFormValid = formData.pid.trim() !== '' &&
+    formData.relato.trim() !== '' &&
+    formData.consent_data &&
+    formData.consent_ai;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -31,7 +31,7 @@ export default function P1_RegistrarRelato() {
     }));
   };
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid) return;
 
@@ -103,15 +103,35 @@ const handleSubmit = async (e) => {
         console.error("Detalle del error FastAPI:", errDetail);
         throw new Error(`Error ${response.status}: El backend rechazó el formato. Revisa la consola.`);
       }
-      
-      showToast('¡Relato registrado y enviado a los agentes BDI exitosamente!', 'success');
-      
-      // Navegamos automáticamente al modelo mental generado para este productor
-      navigate(`/modelo-mental/${formData.pid}`);
-      
+
+      const resData = await response.json();
+      console.log("Respuesta de ingesta de evento:", resData);
+
+      if (resData.status === 'blocked') {
+        const reasons = resData.reasons ? resData.reasons.join(', ') : 'Riesgo o políticas de gobernanza/privacidad del sistema.';
+        showToast(`El relato fue BLOQUEADO en la etapa ${resData.stage}. Motivo: ${reasons}`, 'error');
+        setError(`El relato fue bloqueado por políticas en la etapa ${resData.stage}. Motivo: ${reasons}`);
+      } else if (resData.status === 'review') {
+        let reasonMsg = 'El relato ha sido enviado a la cola de revisión humana.';
+        if (resData.stage === 'AETHNO') {
+          reasonMsg = 'Requiere aprobación humana del facilitador por contener temas sensibles en el probe de profundización.';
+        } else if (resData.stage === 'AGOV') {
+          reasonMsg = 'El alcance de consentimiento está restringido y requiere auditoría de gobernanza.';
+        } else if (resData.stage === 'AING') {
+          reasonMsg = 'La normalización del texto tiene baja confianza y requiere revisión.';
+        }
+        showToast(`El relato requiere revisión humana (Etapa: ${resData.stage}). ${reasonMsg}`, 'info');
+        // Navegamos al dashboard principal
+        navigate('/');
+      } else {
+        showToast('¡Relato registrado y enviado a los agentes BDI exitosamente!', 'success');
+        // Navegamos automáticamente al modelo mental generado para este productor
+        navigate(`/modelo-mental/${formData.pid}`);
+      }
+
       // Limpiamos el formulario (aunque ya habremos navegado)
       setFormData({ pid: '', relato: '', consent_data: false, consent_ai: false });
-      
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -121,7 +141,7 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="max-w-3xl mx-auto py-8">
-      
+
       <header className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <button onClick={() => navigate('/')} className="text-on-surface-variant hover:text-primary transition-colors">
@@ -142,7 +162,7 @@ const handleSubmit = async (e) => {
       )}
 
       <form onSubmit={handleSubmit} className="bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm p-6 md:p-8 rounded-3xl space-y-6">
-        
+
         {/* Identificador del Productor */}
         <div>
           <label htmlFor="pid" className="block font-label-md text-on-surface mb-2">
@@ -191,16 +211,16 @@ const handleSubmit = async (e) => {
             <span className="material-symbols-outlined text-secondary">verified_user</span>
             Consentimientos Requeridos (Strict)
           </h3>
-          
+
           <div className="space-y-4">
             <label className="flex items-start gap-3 cursor-pointer group">
               <div className="mt-1 flex-shrink-0">
-                <input 
-                  type="checkbox" 
-                  name="consent_data" 
+                <input
+                  type="checkbox"
+                  name="consent_data"
                   checked={formData.consent_data}
                   onChange={handleChange}
-                  className="w-5 h-5 rounded border-outline text-primary focus:ring-primary accent-primary" 
+                  className="w-5 h-5 rounded border-outline text-primary focus:ring-primary accent-primary"
                 />
               </div>
               <div>
@@ -215,12 +235,12 @@ const handleSubmit = async (e) => {
 
             <label className="flex items-start gap-3 cursor-pointer group">
               <div className="mt-1 flex-shrink-0">
-                <input 
-                  type="checkbox" 
-                  name="consent_ai" 
+                <input
+                  type="checkbox"
+                  name="consent_ai"
                   checked={formData.consent_ai}
                   onChange={handleChange}
-                  className="w-5 h-5 rounded border-outline text-primary focus:ring-primary accent-primary" 
+                  className="w-5 h-5 rounded border-outline text-primary focus:ring-primary accent-primary"
                 />
               </div>
               <div>
@@ -241,8 +261,8 @@ const handleSubmit = async (e) => {
             type="submit"
             disabled={!isFormValid || loading}
             className={`px-8 py-3 rounded-xl font-label-md flex items-center gap-2 transition-all duration-300
-              ${isFormValid && !loading 
-                ? 'bg-primary text-on-primary hover:shadow-lg hover:-translate-y-0.5' 
+              ${isFormValid && !loading
+                ? 'bg-primary text-on-primary hover:shadow-lg hover:-translate-y-0.5'
                 : 'bg-surface-container-highest text-outline cursor-not-allowed'
               }`}
           >

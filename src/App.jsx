@@ -32,6 +32,7 @@ export default function App() {
             {/* F3.1: Pantalla de Segmentos Comunitarios */}
             <Route path="/segmentos" element={<P5_Segmentos />} />
 
+            <Route path="/auditoria" element={<P7_Auditoria />} />
             <Route path="/auditoria/:pid" element={<P7_Auditoria />} />
             <Route path="/analisis-modelos" element={<MentalModelsAnalysis />} />
             <Route path="/dashboard" element={<P_DashboardResumen />} />
