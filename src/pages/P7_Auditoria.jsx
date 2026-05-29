@@ -238,7 +238,7 @@ export default function P7_Auditoria() {
           <button
             onClick={() => setShowConfirmModal(true)}
             disabled={revokingId === targetPid}
-            className="bg-error hover:bg-[#93000a] text-on-error px-6 py-3 rounded-xl font-label-md transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm disabled:opacity-60"
+            className="bg-error hover:bg-on-error-container text-on-error px-6 py-3 rounded-xl font-label-md transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm disabled:opacity-60"
           >
             {revokingId === targetPid ? (
               <><span className="animate-spin material-symbols-outlined">sync</span> Purgando...</>
@@ -276,7 +276,7 @@ export default function P7_Auditoria() {
             </button>
             <button 
               onClick={handleRevoke}
-              className="flex-1 px-6 py-3 rounded-2xl font-bold text-on-error bg-error hover:bg-[#93000a] shadow-sm transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 rounded-2xl font-bold text-on-error bg-error hover:bg-on-error-container shadow-sm transition-colors flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[20px]">delete_forever</span>
               Purga Definitiva

@@ -235,7 +235,7 @@ export default function P6_AprobacionCurricular() {
                 </button>
                 <button 
                   onClick={() => handleApprove(selectedItem.review_id)}
-                  className="bg-secondary hover:bg-[#653d1e] text-on-secondary px-8 py-3 rounded-xl font-label-md text-lg transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                  className="bg-secondary hover:bg-on-secondary-fixed-variant text-on-secondary px-8 py-3 rounded-xl font-label-md text-lg transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5"
                 >
                   <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                   Aprobar y Desplegar

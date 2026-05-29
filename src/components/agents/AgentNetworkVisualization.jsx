@@ -34,13 +34,13 @@ export function AgentNetworkVisualization({ agents, isLoading }) {
       <div className="grid grid-cols-5 gap-1 text-[9px]">
         {/* Working */}
         <div className="bg-tertiary-fixed/10 border border-tertiary-fixed/30 rounded p-2 text-center">
-          <p className="font-bold text-tertiary-fixed text-sm">{stats.working}</p>
+          <p className="font-bold text-on-tertiary-fixed-variant text-sm">{stats.working}</p>
           <p className="text-on-surface-variant">Procesando</p>
         </div>
 
         {/* Waiting Review */}
         <div className="bg-inverse-primary/10 border border-inverse-primary/30 rounded p-2 text-center">
-          <p className="font-bold text-inverse-primary text-sm">{stats.waiting_review}</p>
+          <p className="font-bold text-on-primary-fixed-variant text-sm">{stats.waiting_review}</p>
           <p className="text-on-surface-variant">Revisión</p>
         </div>
 
@@ -58,7 +58,7 @@ export function AgentNetworkVisualization({ agents, isLoading }) {
 
         {/* Offline */}
         <div className="bg-outline-variant/10 border border-outline-variant/30 rounded p-2 text-center">
-          <p className="font-bold text-outline-variant text-sm">{stats.offline}</p>
+          <p className="font-bold text-on-surface-variant text-sm">{stats.offline}</p>
           <p className="text-on-surface-variant">Inactivos</p>
         </div>
       </div>

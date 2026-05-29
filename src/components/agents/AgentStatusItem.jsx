@@ -56,7 +56,7 @@ export function AgentStatusItem({ agent }) {
                 {agent.current_task}
               </>
             ) : (
-              <span className="italic text-outline-variant">Sin tarea activa</span>
+              <span className="italic text-outline">Sin tarea activa</span>
             )}
           </p>
         </div>

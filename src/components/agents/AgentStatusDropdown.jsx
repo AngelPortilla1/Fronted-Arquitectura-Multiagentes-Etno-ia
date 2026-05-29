@@ -129,7 +129,7 @@ export function AgentStatusDropdown({ agents, isLoading, error }) {
                   <p className="text-sm text-on-surface-variant">
                     No hay agentes disponibles
                   </p>
-                  <p className="text-xs text-outline-variant">
+                  <p className="text-xs text-on-surface-variant">
                     Conecta el backend para activar observabilidad
                   </p>
                 </div>
@@ -151,15 +151,15 @@ export function AgentStatusDropdown({ agents, isLoading, error }) {
             <div className="bg-surface-container/50 px-4 py-2 border-t border-outline-variant/20 grid grid-cols-3 gap-2 text-[10px]">
               <div className="text-center py-1 border-r border-outline-variant/20">
                 <p className="font-bold text-primary">{totalCount}</p>
-                <p className="text-outline-variant">Totales</p>
+                <p className="text-on-surface-variant">Totales</p>
               </div>
               <div className="text-center py-1 border-r border-outline-variant/20">
-                <p className="font-bold text-tertiary-fixed">{processingCount}</p>
-                <p className="text-outline-variant">Procesando</p>
+                <p className="font-bold text-on-tertiary-fixed-variant">{processingCount}</p>
+                <p className="text-on-surface-variant">Procesando</p>
               </div>
               <div className="text-center py-1">
                 <p className="font-bold text-primary">{agents.filter((a) => a.status === 'IDLE').length}</p>
-                <p className="text-outline-variant">En Espera</p>
+                <p className="text-on-surface-variant">En Espera</p>
               </div>
             </div>
           )}

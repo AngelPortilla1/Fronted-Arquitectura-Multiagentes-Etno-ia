@@ -84,10 +84,10 @@ export default function P_DashboardResumen() {
             <div className="relative group p-6 rounded-3xl bg-surface/60 backdrop-blur-md border border-white/40 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-secondary opacity-10 rounded-bl-full -mr-4 -mt-4"></div>
               <div className="flex justify-between items-start mb-6">
-                <div className="w-10 h-10 rounded-xl bg-secondary/20 text-[#805533] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-secondary/20 text-secondary flex items-center justify-center">
                   <span className="material-symbols-outlined">pending_actions</span>
                 </div>
-                <span className="text-xs font-bold text-[#805533] bg-secondary/10 px-2 py-1 rounded-full uppercase tracking-wider">Curricular</span>
+                <span className="text-xs font-bold text-secondary bg-secondary/10 px-2 py-1 rounded-full uppercase tracking-wider">Curricular</span>
               </div>
               <div>
                 <p className="text-sm font-bold text-on-surface-variant mb-1">Revisiones Pendientes</p>

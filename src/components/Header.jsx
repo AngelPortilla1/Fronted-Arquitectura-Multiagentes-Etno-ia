@@ -104,8 +104,9 @@ export default function Header() {
                   style={{ left: useStub ? '18px' : '2px' }}
                 />
                 <div
-                  className="block h-full rounded-full transition-colors duration-300 w-full"
-                  style={{ backgroundColor: useStub ? '#4d6453' : '#ba1a1a' }}
+                  className={`block h-full rounded-full transition-colors duration-300 w-full ${
+                    useStub ? 'bg-surface-tint' : 'bg-error'
+                  }`}
                 ></div>
               </div>
             </div>
@@ -117,7 +118,7 @@ export default function Header() {
               title="Inicializar Sistema Multiagente"
               className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-300 font-label-md border flex-shrink-0 ${isColdStarting
                   ? 'bg-surface-container text-on-surface-variant border-transparent cursor-wait'
-                  : 'bg-primary hover:bg-[#3b4d3f] text-on-primary border-primary hover:shadow-md hover:-translate-y-0.5'
+                  : 'bg-primary hover:bg-primary/90 text-on-primary border-primary hover:shadow-md hover:-translate-y-0.5'
                 }`}
             >
               {isColdStarting ? (

@@ -42,7 +42,7 @@ export default function P0_Home() {
       </div>
 
       <div className="mb-10 text-center animate-in fade-in duration-700 delay-150">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 bg-[#2E7D32] text-white px-6 py-2.5 rounded-full font-bold hover:bg-[#1B5E20] transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-[#2E7D32]/20">
+        <Link to="/dashboard" className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 rounded-full font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-primary/20">
           <span className="material-symbols-outlined text-[18px]">query_stats</span>
           Ver Estado General del Sistema
         </Link>
@@ -125,7 +125,7 @@ export default function P0_Home() {
           <div className="absolute inset-0 bg-secondary opacity-0 group-hover:opacity-5 transition-opacity duration-500"></div>
           <div className="absolute top-0 right-0 w-32 h-32 bg-secondary opacity-5 rounded-bl-[100px] -mr-10 -mt-10"></div>
 
-          <div className="w-14 h-14 rounded-2xl bg-[#805533] text-on-secondary flex items-center justify-center mb-8 shadow-inner">
+          <div className="w-14 h-14 rounded-2xl bg-secondary text-on-secondary flex items-center justify-center mb-8 shadow-inner">
             <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
           </div>
 
