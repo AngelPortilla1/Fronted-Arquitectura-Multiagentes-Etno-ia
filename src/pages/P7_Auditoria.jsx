@@ -9,6 +9,12 @@ export default function P7_Auditoria() {
   const [revokingId, setRevokingId] = useState(null);
   const [revokeScope, setRevokeScope] = useState('');  // '' = revocación total
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Paginación y Filtros
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterLayer, setFilterLayer] = useState(''); // '' = Todas
   
   // Usamos uno de los PIDs reales de tu base de datos
   const { pid: targetPid } = useParams(); // Obtenemos el PID a auditar desde la URL 
@@ -43,6 +49,38 @@ export default function P7_Auditoria() {
       setLoading(false);
     }
   };
+
+  // Filtrar logs en el cliente
+  const filteredLogs = logs.filter(log => {
+    // Filtro por capa de memoria
+    if (filterLayer && log.memory_layer !== filterLayer) {
+      return false;
+    }
+    // Filtro por búsqueda de texto
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const actionMatch = log.action && log.action.toLowerCase().includes(term);
+      const agentMatch = log.agent && log.agent.toLowerCase().includes(term);
+      const hashMatch = log.record_hash && log.record_hash.toLowerCase().includes(term);
+      const deltaText = extractDeltaText(log).toLowerCase();
+      const deltaMatch = deltaText.includes(term);
+      return actionMatch || agentMatch || hashMatch || deltaMatch;
+    }
+    return true;
+  });
+
+  // Resetear a la página 1 cuando cambia algún filtro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterLayer, itemsPerPage]);
+
+  // Cálculos de paginación
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const paginatedLogs = filteredLogs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   const handleRevoke = async () => {
     setShowConfirmModal(false);
@@ -144,19 +182,54 @@ export default function P7_Auditoria() {
 
       {/* Cadena de Auditoría (Línea de tiempo técnica real) */}
       <div className="flex-1 bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl overflow-hidden flex flex-col h-[65vh] min-h-[500px] mb-6">
-        <div className="bg-surface-container-highest p-4 border-b border-outline-variant/30 flex items-center justify-between">
+        <div className="bg-surface-container-highest p-4 border-b border-outline-variant/30 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-on-surface-variant">history</span>
             <h2 className="font-label-md font-bold uppercase tracking-wider text-on-surface">Registro de Eventos (Log Criptográfico)</h2>
           </div>
-          <span className="text-xs font-mono text-on-surface-variant">{logs.length} eventos registrados</span>
+          <span className="text-xs font-mono text-on-surface-variant">
+            {filteredLogs.length !== logs.length ? `${filteredLogs.length} de ${logs.length}` : logs.length} eventos registrados
+          </span>
+        </div>
+
+        {/* Filtros */}
+        <div className="bg-surface-container/60 p-4 border-b border-outline-variant/30 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
+          <div className="relative w-full md:w-80">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="material-symbols-outlined text-on-surface-variant text-sm">search</span>
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar acción, agente o detalle..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-surface border border-outline-variant/50 text-on-surface rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            />
+          </div>
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+            <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Capa de Memoria:</span>
+            <select
+              value={filterLayer}
+              onChange={(e) => setFilterLayer(e.target.value)}
+              className="bg-surface border border-outline-variant/50 text-on-surface rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            >
+              <option value="">Todas</option>
+              <option value="M_policy">M_policy (Políticas)</option>
+              <option value="M_sem">M_sem (Semántica)</option>
+              <option value="M_graph">M_graph (Grafo BDI)</option>
+              <option value="M_audit">M_audit (Auditoría)</option>
+              <option value="M_ing">M_ing (Ingesta)</option>
+            </select>
+          </div>
         </div>
         
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-6 overflow-y-auto space-y-6 flex-1">
           {logs.length === 0 ? (
             <p className="text-center text-on-surface-variant italic">No hay eventos de auditoría para este productor.</p>
+          ) : filteredLogs.length === 0 ? (
+            <p className="text-center text-on-surface-variant italic">No se encontraron eventos de auditoría con los filtros aplicados.</p>
           ) : (
-            logs.map((log, index) => (
+            paginatedLogs.map((log, index) => (
               <div key={log.record_hash} className="relative pl-6 pb-6 border-l-2 border-outline-variant/30 last:pb-0 last:border-transparent group">
                 {/* Timeline dot */}
                 <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-surface border-2 border-primary group-hover:bg-primary transition-colors"></div>
@@ -206,6 +279,68 @@ export default function P7_Auditoria() {
             ))
           )}
         </div>
+
+        {/* Paginación */}
+        {filteredLogs.length > 0 && (
+          <div className="bg-surface-container-highest p-4 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+            {/* Selector de items por página */}
+            <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+              <span>Mostrar</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="bg-surface border border-outline-variant/50 text-on-surface rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary font-bold"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <span>de {filteredLogs.length} resultados</span>
+            </div>
+
+            {/* Navegación de páginas */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border border-outline-variant/50 text-on-surface-variant hover:text-primary hover:border-primary disabled:opacity-30 disabled:hover:text-on-surface-variant disabled:hover:border-outline-variant/50 transition-colors"
+                title="Primera página"
+              >
+                <span className="material-symbols-outlined text-[18px]">first_page</span>
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border border-outline-variant/50 text-on-surface-variant hover:text-primary hover:border-primary disabled:opacity-30 disabled:hover:text-on-surface-variant disabled:hover:border-outline-variant/50 transition-colors"
+                title="Página anterior"
+              >
+                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+              </button>
+
+              <span className="text-xs font-mono text-on-surface-variant mx-2 font-bold">
+                Pág. {currentPage} de {totalPages || 1}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border border-outline-variant/50 text-on-surface-variant hover:text-primary hover:border-primary disabled:opacity-30 disabled:hover:text-on-surface-variant disabled:hover:border-outline-variant/50 transition-colors"
+                title="Página siguiente"
+              >
+                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border border-outline-variant/50 text-on-surface-variant hover:text-primary hover:border-primary disabled:opacity-30 disabled:hover:text-on-surface-variant disabled:hover:border-outline-variant/50 transition-colors"
+                title="Última página"
+              >
+                <span className="material-symbols-outlined text-[18px]">last_page</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Panel de Revocación (Zona Peligrosa al Final) */}
