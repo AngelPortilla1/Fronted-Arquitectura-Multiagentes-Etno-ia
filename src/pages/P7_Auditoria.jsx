@@ -2,6 +2,47 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_ENDPOINTS, getRevokeUrl } from '../api/client';
 
+// ─── Helper: Traducir el payload JSON a texto legible ───────────────────────
+// IMPORTANTE: Esta función debe definirse ANTES del componente para evitar el
+// 'ReferenceError: Cannot access before initialization' (las const no se elevan/hoist).
+const extractDeltaText = (log) => {
+  try {
+    const { action, payload } = log;
+    switch(action) {
+      case 'validate_consent':
+        return `Consentimiento: ${payload.decision.toUpperCase()}. Permisos: ${payload.allowed_scopes.join(', ')}`;
+      case 'normalize':
+        return `Texto normalizado (${payload.channel}): "${payload.normalized_text.substring(0, 70)}..."`;
+      case 'suggest_probe':
+        return `Pregunta de profundización sugerida: "${payload.question}"`;
+      case 'assign_codes': {
+        const codes = payload.codes.map(c => c.code).join(', ');
+        return `Códigos semánticos asignados: ${codes}`;
+      }
+      case 'update_mental_model':
+        return `Grafo actualizado (Revisión ${payload.revision}). Nodos: ${payload.nodes.length} | Relaciones nuevas: ${payload.edges.length}`;
+      case 'evaluate_fairness':
+        return `Evaluación de sesgos: ${payload.decision}. Acción recomendada: ${payload.recommended_action}`;
+      case 'propose_route':
+        return `Ruta candidata generada (${payload.route_type}). Módulos propuestos: ${payload.steps.length}`;
+      case 'explain_route':
+        return `Razonamiento LLM: "${payload.explanation.substring(0, 80)}..."`;
+      case 'open_review':
+        return `Revisión Humana Requerida (Estado: ${payload.status}). Rol: ${payload.required_role}`;
+      case 'approve_review':
+        return `Aprobación Humana registrada. Review ID: ${payload.review_id.substring(0,8)}... Por: ${payload.resolved_by}`;
+      case 'reject_review':
+        return `Rechazo Humano registrado. Review ID: ${payload.review_id.substring(0,8)}... Por: ${payload.resolved_by}`;
+      case 'persist_delta':
+        return `Delta guardado en base de datos. Hash de integridad: ${payload.data_hash.substring(0, 16)}...`;
+      default:
+        return `Registro modificado en capa de memoria: ${log.memory_layer}`;
+    }
+  } catch (e) {
+    return 'Detalles técnicos cifrados en el payload original.';
+  }
+};
+
 export default function P7_Auditoria() {
   const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
@@ -107,44 +148,6 @@ export default function P7_Auditoria() {
       console.error(err);
       alert(`Error al revocar: ${err.message}`);
       setRevokingId(null);
-    }
-  };
-
-  // Función traductora para convertir el Payload JSON complejo a texto legible para el Auditor
-  const extractDeltaText = (log) => {
-    try {
-      const { action, payload } = log;
-      switch(action) {
-        case 'validate_consent':
-          return `Consentimiento: ${payload.decision.toUpperCase()}. Permisos: ${payload.allowed_scopes.join(', ')}`;
-        case 'normalize':
-          return `Texto normalizado (${payload.channel}): "${payload.normalized_text.substring(0, 70)}..."`;
-        case 'suggest_probe':
-          return `Pregunta de profundización sugerida: "${payload.question}"`;
-        case 'assign_codes':
-          const codes = payload.codes.map(c => c.code).join(', ');
-          return `Códigos semánticos asignados: ${codes}`;
-        case 'update_mental_model':
-          return `Grafo actualizado (Revisión ${payload.revision}). Nodos: ${payload.nodes.length} | Relaciones nuevas: ${payload.edges.length}`;
-        case 'evaluate_fairness':
-          return `Evaluación de sesgos: ${payload.decision}. Acción recomendada: ${payload.recommended_action}`;
-        case 'propose_route':
-          return `Ruta candidata generada (${payload.route_type}). Módulos propuestos: ${payload.steps.length}`;
-        case 'explain_route':
-          return `Razonamiento LLM: "${payload.explanation.substring(0, 80)}..."`;
-        case 'open_review':
-          return `Revisión Humana Requerida (Estado: ${payload.status}). Rol: ${payload.required_role}`;
-        case 'approve_review':
-          return `Aprobación Humana registrada. Review ID: ${payload.review_id.substring(0,8)}... Por: ${payload.resolved_by}`;
-        case 'reject_review':
-          return `Rechazo Humano registrado. Review ID: ${payload.review_id.substring(0,8)}... Por: ${payload.resolved_by}`;
-        case 'persist_delta':
-          return `Delta guardado en base de datos. Hash de integridad: ${payload.data_hash.substring(0, 16)}...`;
-        default:
-          return `Registro modificado en capa de memoria: ${log.memory_layer}`;
-      }
-    } catch (e) {
-      return "Detalles técnicos cifrados en el payload original.";
     }
   };
 
@@ -422,3 +425,6 @@ export default function P7_Auditoria() {
     </div>
   );
 }
+
+// extractDeltaText ha sido movida al inicio del archivo (antes del componente)
+// para evitar el ReferenceError de Temporal Dead Zone con declaraciones `const`.

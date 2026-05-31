@@ -11,6 +11,8 @@ export default function P4_ColadeRevisiones() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
+  const [processingStep, setProcessingStep] = useState(null);
 
   // Determinar si estamos en modo real o stub
   const isStubMode = mode === 'Stubs';
@@ -46,6 +48,8 @@ export default function P4_ColadeRevisiones() {
 
   const handleApprove = async (review) => {
     const { review_id, stage, payload } = review;
+    setProcessingId(review_id);
+    setProcessingStep('approving');
     try {
       const response = await fetch(getReviewApproveUrl(review_id), {
         method: 'POST',
@@ -57,6 +61,7 @@ export default function P4_ColadeRevisiones() {
         // Si el payload contiene el evento original, lo re-enviamos automáticamente al backend
         // para continuar su procesamiento con el bypass de aprobación
         if (payload && payload.event) {
+          setProcessingStep('bdi_running');
           showToast('Procesando el relato aprobado con los agentes BDI...', 'info');
           try {
             const ingestResponse = await fetch(API_ENDPOINTS.EVENTS, {
@@ -68,28 +73,48 @@ export default function P4_ColadeRevisiones() {
               const resData = await ingestResponse.json();
               if (resData.status === 'ok' || resData.status === 'ok_with_review') {
                 showToast('¡Modelo mental y ruta pedagógica generados con éxito!', 'success');
+                setProcessingStep('success');
               } else if (resData.status === 'review') {
                 showToast(`El relato avanzó pero requiere revisión en la etapa ${resData.stage}.`, 'info');
+                setProcessingStep('success');
+              } else {
+                setProcessingStep('error');
               }
             } else {
               showToast('Error al re-procesar el relato aprobado en el backend.', 'error');
+              setProcessingStep('error');
             }
           } catch (e) {
             console.error('Error al re-procesar el relato aprobado:', e);
+            showToast('Error al procesar el relato aprobado.', 'error');
+            setProcessingStep('error');
           }
+        } else {
+          setProcessingStep('success');
         }
         
+        // Esperamos 1.5s para que se vea el checkmark de éxito en la interfaz
+        await new Promise(resolve => setTimeout(resolve, 1500));
         setReviews(currentReviews => currentReviews.filter(r => r.review_id !== review_id));
       } else {
         showToast('Hubo un problema al aprobar la revisión en el servidor.', 'error');
+        setProcessingStep('error');
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     } catch (err) {
       showToast('Error de red. Revisa tu conexión con el backend.', 'error');
       console.error(err);
+      setProcessingStep('error');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } finally {
+      setProcessingId(null);
+      setProcessingStep(null);
     }
   };
 
   const handleReject = async (reviewId) => {
+    setProcessingId(reviewId);
+    setProcessingStep('rejecting');
     try {
       const response = await fetch(getReviewRejectUrl(reviewId), {
         method: 'POST',
@@ -97,13 +122,22 @@ export default function P4_ColadeRevisiones() {
 
       if (response.ok) {
         showToast('Revisión rechazada correctamente.', 'info');
+        setProcessingStep('success');
+        await new Promise(resolve => setTimeout(resolve, 1200));
         setReviews(currentReviews => currentReviews.filter(r => r.review_id !== reviewId));
       } else {
         showToast('Hubo un problema al rechazar la revisión en el servidor.', 'error');
+        setProcessingStep('error');
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     } catch (err) {
       showToast('Error de red. Revisa tu conexión con el backend.', 'error');
       console.error(err);
+      setProcessingStep('error');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } finally {
+      setProcessingId(null);
+      setProcessingStep(null);
     }
   };
 
@@ -167,6 +201,7 @@ export default function P4_ColadeRevisiones() {
             const isIngestionStage = review.stage === 'AING';
             const isGovStage = review.stage === 'AGOV';
             const isFairStage = review.stage === 'AFAIR';
+            const isCodeStage = review.stage === 'ACODE';
             
             // Determinar si podemos mostrar el botón "Ver Grafo BDI"
             // Solo si ya existe un modelo mental guardado (M_CURR, o AFAIR)
@@ -175,8 +210,83 @@ export default function P4_ColadeRevisiones() {
             return (
               <article 
                 key={review.review_id} 
-                className="bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm p-6 md:p-8 rounded-3xl hover:shadow-md transition-shadow group animate-in fade-in slide-in-from-bottom-4 duration-300"
+                className="relative bg-surface/80 backdrop-blur-md border border-white/40 shadow-sm p-6 md:p-8 rounded-3xl hover:shadow-md transition-shadow group animate-in fade-in slide-in-from-bottom-4 duration-300 overflow-hidden"
               >
+                {/* Overlay de carga interactivo y dinámico */}
+                {processingId === review.review_id && (
+                  <div className="absolute inset-0 bg-surface/95 backdrop-blur-md z-30 rounded-3xl flex flex-col items-center justify-center p-8 animate-in fade-in duration-200">
+                    <div className="flex flex-col items-center gap-5 max-w-md text-center">
+                      {processingStep === 'success' ? (
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-bounce">
+                          <span className="material-symbols-outlined text-5xl text-primary font-bold">check_circle</span>
+                        </div>
+                      ) : processingStep === 'error' ? (
+                        <div className="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-5xl text-error font-bold">error</span>
+                        </div>
+                      ) : (
+                        <div className="relative flex items-center justify-center w-16 h-16">
+                          <span className="animate-spin material-symbols-outlined text-6xl text-primary" style={{ fontVariationSettings: "'wght' 300" }}>sync</span>
+                          <span className="absolute text-[10px] font-bold text-primary animate-pulse">BDI</span>
+                        </div>
+                      )}
+
+                      <div>
+                        <h3 className="font-headline-md text-xl font-bold text-on-surface">
+                          {processingStep === 'approving' && 'Registrando Aprobación'}
+                          {processingStep === 'rejecting' && 'Registrando Rechazo'}
+                          {processingStep === 'bdi_running' && 'Procesando con Agentes BDI'}
+                          {processingStep === 'success' && '¡Proceso Completado!'}
+                          {processingStep === 'error' && 'Error en el Procesamiento'}
+                        </h3>
+                        <p className="text-xs text-on-surface-variant mt-1.5 px-4">
+                          {processingStep === 'approving' && 'Comunicando decisión con el servidor...'}
+                          {processingStep === 'rejecting' && 'Comunicando decisión con el servidor...'}
+                          {processingStep === 'bdi_running' && 'El orquestador está ejecutando la normalización, alineación semántica, modelo mental y plan curricular. Esto puede demorar unos 30 segundos.'}
+                          {processingStep === 'success' && 'Los datos han sido actualizados exitosamente en la base de datos.'}
+                          {processingStep === 'error' && 'No se pudo completar el flujo. Por favor, reintenta.'}
+                        </p>
+                      </div>
+
+                      {/* Lista de pasos con su estado actual */}
+                      {(processingStep === 'approving' || processingStep === 'rejecting' || processingStep === 'bdi_running' || processingStep === 'success') && (
+                        <div className="w-full space-y-3 mt-3 text-left border-t border-outline-variant/30 pt-4 px-2">
+                          {/* Paso 1 */}
+                          <div className="flex items-center gap-3">
+                            {processingStep === 'approving' || processingStep === 'rejecting' ? (
+                              <span className="animate-spin material-symbols-outlined text-primary text-[20px]">sync</span>
+                            ) : (
+                              <span className="material-symbols-outlined text-primary text-[20px] font-bold">check_circle</span>
+                            )}
+                            <span className={`text-sm ${
+                              processingStep === 'approving' || processingStep === 'rejecting' ? 'font-semibold text-primary' : 'text-on-surface-variant line-through opacity-60'
+                            }`}>
+                              {processingStep === 'rejecting' ? 'Registrar rechazo en base de datos' : 'Registrar aprobación en base de datos'}
+                            </span>
+                          </div>
+
+                          {/* Paso 2: Solo si requiere procesar BDI */}
+                          {review.payload?.event && (
+                            <div className="flex items-center gap-3">
+                              {processingStep === 'approving' || processingStep === 'rejecting' ? (
+                                <span className="material-symbols-outlined text-outline-variant text-[20px]">circle</span>
+                              ) : processingStep === 'bdi_running' ? (
+                                <span className="animate-spin material-symbols-outlined text-primary text-[20px]">sync</span>
+                              ) : (
+                                <span className="material-symbols-outlined text-primary text-[20px] font-bold">check_circle</span>
+                              )}
+                              <span className={`text-sm ${
+                                processingStep === 'bdi_running' ? 'font-semibold text-primary' : 'text-on-surface-variant'
+                              }`}>
+                                Re-ingesta del relato y ejecución de agentes BDI (~30s)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {/* Identificación del Productor */}
                 <div className="mb-8 border-b border-outline-variant/30 pb-6">
                   <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -213,6 +323,7 @@ export default function P4_ColadeRevisiones() {
                     {isIngestionStage && 'Normalización / Transcripción (Baja Confianza)'}
                     {isGovStage && 'Auditoría de Gobernanza y Consentimiento'}
                     {isFairStage && 'Evaluación de Equidad y Riesgo (AFAIR)'}
+                    {isCodeStage && 'Códigos Cualitativos Asignados (ACODE)'}
                   </h2>
                   <p className="text-sm text-on-surface-variant font-medium mt-3">
                     <strong>Motivo de revisión:</strong> {review.reason}
@@ -368,6 +479,41 @@ export default function P4_ColadeRevisiones() {
                   </div>
                 )}
 
+                {/* 4.5. Etapa ACODE (Códigos cualitativos) */}
+                {isCodeStage && (
+                  <div className="mb-8 space-y-4 animate-in fade-in duration-300">
+                    <div className="bg-surface-container-highest p-5 rounded-2xl border border-outline-variant/30">
+                      <h3 className="font-label-md text-secondary mb-3 flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined text-[20px]">sell</span>
+                        Códigos sugeridos que requieren revisión
+                      </h3>
+                      <ul className="space-y-3">
+                        {review.payload?.codes && Array.isArray(review.payload.codes) ? (
+                          review.payload.codes.map((codeItem, index) => (
+                            <li key={index} className="bg-surface p-4 rounded-xl border border-outline-variant/20 flex flex-col gap-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono font-bold text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">
+                                  #{codeItem.code}
+                                </span>
+                                <span className="text-xs text-on-surface-variant font-medium">
+                                  Confianza: <strong>{Math.round((codeItem.confidence ?? 0) * 100)}%</strong>
+                                </span>
+                              </div>
+                              {codeItem.evidence && (
+                                <p className="text-sm italic text-on-surface-variant bg-surface-container-high/40 p-3 rounded-lg border border-dashed border-outline-variant/20">
+                                  "{Array.isArray(codeItem.evidence) ? codeItem.evidence.join(' ') : codeItem.evidence}"
+                                </p>
+                              )}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-on-surface-variant italic">No hay códigos definidos en el payload</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
                 {/* 5. Etapa AFAIR (Riesgo y Equidad) */}
                 {isFairStage && (
                   <div className="mb-8 space-y-4 bg-error-container/15 p-5 rounded-2xl border border-error/25 text-on-surface animate-in fade-in duration-300">
@@ -389,7 +535,8 @@ export default function P4_ColadeRevisiones() {
                 <div className="flex flex-col md:flex-row justify-end gap-3 pt-2">
                   <button
                     onClick={() => handleReject(review.review_id)}
-                    className="w-full md:w-auto bg-surface-container hover:bg-error-container hover:text-error text-on-surface px-8 py-4 rounded-2xl font-label-md text-lg transition-all duration-300 flex items-center justify-center gap-3"
+                    disabled={processingId !== null}
+                    className="w-full md:w-auto bg-surface-container hover:bg-error-container hover:text-error text-on-surface px-8 py-4 rounded-2xl font-label-md text-lg transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Rechazar esta revisión"
                   >
                     <span className="material-symbols-outlined">cancel</span>
@@ -397,11 +544,21 @@ export default function P4_ColadeRevisiones() {
                   </button>
                   <button
                     onClick={() => handleApprove(review)}
-                    className="w-full md:w-auto bg-primary text-on-primary px-8 py-4 rounded-2xl font-label-md text-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-3"
+                    disabled={processingId !== null}
+                    className="w-full md:w-auto bg-primary text-on-primary px-8 py-4 rounded-2xl font-label-md text-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Aprobar esta revisión"
                   >
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    {isCurrStage ? 'Aprobar Ruta Pedagógica' : 'Aprobar y Registrar Relato'}
+                    {processingId === review.review_id ? (
+                      <>
+                        <span className="animate-spin material-symbols-outlined">sync</span>
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                        {isCurrStage ? 'Aprobar Ruta Pedagógica' : 'Aprobar y Registrar Relato'}
+                      </>
+                    )}
                   </button>
                 </div>
               </article>
